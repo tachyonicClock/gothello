@@ -1,23 +1,51 @@
 import React from 'react';
-import Paper from '@material-ui/core/Paper';
-import Grid from '@material-ui/core/Grid';
-import logo from './logo.svg';
-import Board from './Board/Board'
-import './App.css';
-import GameMenu from './GameMenu/GameMenu';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+} from "react-router-dom";
+import Game from './Routes/Game';
+import Home from './Routes/Home';
+import { ThemeProvider } from '@material-ui/styles';
+import { createMuiTheme } from '@material-ui/core/styles';
 
+const theme = createMuiTheme({
+  palette: {
+    primary: {
+      main: '#5A473A',
+    },
+    secondary: {
+      light: '#0066ff',
+      main: '#943C00',
+      contrastText: '#ffcc00',
+    },
+    contrastThreshold: 3,
+    tonalOffset: 0.2,
+  },
+  typography: {
+    fontFamily: [
+      '"Comfortaa"',
+      "cursive"
+    ]
+  }
+});
+
+// Routes the user to the right place and applies the theme
 function App() {
   return (
-    <div>
-      <Grid container spacing={3} justify='center'>
-        <Grid item xs={12} md={4} lg={4}>
-          <GameMenu></GameMenu>
-        </Grid>
-        <Grid item xs={12} sm={11} md={8} lg={6}>
-          <Board gridSize={8}></Board>
-        </Grid>
-      </Grid>
-    </div>
+    <ThemeProvider theme={theme}>
+      <Router>
+        <Switch>
+          <Route path="/game">
+            <Game></Game>
+          </Route>
+          <Route path="/">
+            <Home></Home>
+          </Route>
+        </Switch>
+      </Router>
+    </ThemeProvider>
+
   );
 }
 

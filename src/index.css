@@ -6,16 +6,23 @@
   --pallette-light: #DDD9D6;
   --pallette-lightest: #FFFFFF;
   --pallette-highlight: rgba(148, 60, 0, 0.5);
+  --shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
 }
 
-body {
+#root {
+  height: 100%;
+  display: flex;
+}
+
+body, html {
   margin: 2vw;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: -apple-system, BlinkMacSystemFont, 'Comfortaa', 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--pallette-light);
+  background-color: var(--pallette-medium);
+  height: calc(100% - 4vw);
 }
 
 code {
@@ -30,7 +37,7 @@ code {
   height: 0;
   background-color: var(--pallette-dark);
   padding-bottom: 100%;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+  box-shadow: var(--shadow);
   border-radius: 12px;
 }
 
@@ -110,5 +117,18 @@ code {
 }
 
 
+/* -----    Home Screen     ----- */
+.Splash {
+  background-color: var(--pallette-lightest);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  padding-bottom: 10px;
+}
+
+.Logo {
+  background-color: var(--pallette-light);
+  padding: 10px;
+}
 
 

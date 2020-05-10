@@ -1,23 +1,27 @@
 import React from 'react';
 
 function Cell(props) {
-
   // Wrapper to the provided onclick handler
   function onClick(e) {
-    e.Cell.x = props.x
-    e.Cell.y = props.y
-    props.onclick(e)
+    if (props.legal) {
+      e.cell = {}
+      e.cell.x = props.x
+      e.cell.y = props.y
+      props.onClick(e)
+    }
   }
 
+  // Displays the cells 'stone'
   var stone = <></>
   if (props.stone !== "none" ) {
     stone = <div className={"Stone " + props.stone}></div>
   }
+
   return (
-  <div 
+  <div
+    onClick={onClick}
     style={props.style} 
-    className={"Cell " + (props.legal? "legal": "illegal")}
-    onclick={onClick}>
+    className={"Cell " + (props.legal? "legal": "illegal")}>
     {stone}
   </div>)
 }

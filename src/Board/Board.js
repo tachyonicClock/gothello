@@ -21,7 +21,7 @@ function Board(props) {
       if (y===gridSize-1) cellStyle.borderBottomColor = transparent
 
       displayGrid.push(
-      <Cell style={cellStyle} x={x} y={y} legal={true} stone={"black"} onclick={props.onclick}></Cell>)
+      <Cell key={y*gridSize+x} style={cellStyle} x={x} y={y} legal={true} stone={board[x][y]} onClick={props.onClick}></Cell>)
     }
   }
   return (
