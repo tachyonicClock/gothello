@@ -1,20 +1,18 @@
 package gothello.gothelloserver;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.slf4j.Logger;
+
 @RestController
-public class GameController {
-	
-	// allGames contains every game both public and private
-	private static final ConcurrentHashMap<Long, Game> allGames = new ConcurrentHashMap<Long, Game>();
-	
-	// openGames is a list of games that are open for a client to connect to
-	private static final ConcurrentLinkedQueue<Game> openGames = new ConcurrentLinkedQueue<Game>();
+@RequestMapping("/api/v0/game")
+public class HTTPHandler {
+	Logger log = LoggerFactory.getLogger(HTTPHandler.class);
+
 	
 	/**
 	* This endpoint will create a new game and return its game ID. This lets a
@@ -23,14 +21,14 @@ public class GameController {
 	* must be shared manually. This lets users play with who they want to by
 	* sharing the link.
 	*/
-	@GetMapping("/api/v0/game/new")
+	@GetMapping("/new")
 	public Response newGame(@RequestParam(value = "type", defaultValue = "public") String gameType) {
 		Game game = new Game(Game.typeFromString(gameType));
-		allGames.put(game.getId(), game);
+		App.allGames.put(game.id, game);
 		
 		// Add game to open games if the game is open (public and not full)
 		if (game.getOpen()) {
-			openGames.add(game);
+			App.openGames.add(game);
 		}
 		return game;
 	}
@@ -40,14 +38,14 @@ public class GameController {
 	* connect with someone waiting for a game. If it does not find a game it
 	* returns an error
 	*/
-	@GetMapping("/api/v0/game/join")
+	@GetMapping("/join")
 	public Response joinGame() {
-		if (openGames.size() == 0) {
-			return new JSONError("No game found");
+		if (App.openGames.size() == 0) {
+			return new ErrorResponse("Game not found, try making one");
 		}
 		// Move the top game to the back of the queue and return it
-		Game game = openGames.remove();
-		openGames.add(game);
+		Game game = App.openGames.remove();
+		App.openGames.add(game);
 		return game;
 	}
 }

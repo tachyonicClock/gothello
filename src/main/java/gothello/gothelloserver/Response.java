@@ -5,7 +5,7 @@ public class Response {
 	public Boolean getOk() {
 		return true;
 	}
-	
+
 	public String getType() {
 		return "response";
 	}
