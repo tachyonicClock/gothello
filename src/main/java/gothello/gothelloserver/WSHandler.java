@@ -2,6 +2,9 @@ package gothello.gothelloserver;
 
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import gothello.gothelloserver.messages.ErrorMessage;
+
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +19,7 @@ import org.springframework.web.socket.TextMessage;
  * the path variable
  */
 public class WSHandler extends TextWebSocketHandler {
-	Logger log = LoggerFactory.getLogger(HTTPHandler.class);
+	Logger log = LoggerFactory.getLogger(WSHandler.class);
 	ObjectMapper objectMapper = new ObjectMapper();
 
 	// getGameId gets the Game id from the path
@@ -32,7 +35,7 @@ public class WSHandler extends TextWebSocketHandler {
 	public static Game getGame(int id) throws Exception {
 		Game game = App.allGames.get(id);
 		if (game == null) {
-			throw new Exception("Game not found");
+			throw new Exception("[" + id + "] Game not found");
 		}
 		return game;
 	}
@@ -43,8 +46,8 @@ public class WSHandler extends TextWebSocketHandler {
 		try {
 			getGame(getGameId(session)).handleWebSocketMessage(session, message);
 		} catch (Exception e) {
-			session.sendMessage(Util.JSONMessage(new ErrorResponse(e.getMessage())));
-			log.error(e.getMessage());
+			Util.JSONMessage(session, new ErrorMessage(e.getMessage()));
+			log.warn("Error on message received, " + e.getMessage() + ", " + e.getClass());
 		}
 	}
 
@@ -55,19 +58,19 @@ public class WSHandler extends TextWebSocketHandler {
 		try {
 			getGame(getGameId(session)).handleWebSocketConnection(session);
 		} catch (Exception e) {
-			session.sendMessage(Util.JSONMessage(new ErrorResponse(e.getMessage())));
-			log.error(e.getMessage());
+			Util.JSONMessage(session, new ErrorMessage(e.getMessage()));
+			log.warn("Error after connection established, " + e.getMessage());
 		}
 	}
 
-	// afterConnectionClosed gets the correct Game and calls its handler for 
+	// afterConnectionClosed gets the correct Game and calls its handler for
 	// connection closes
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 		try {
 			getGame(getGameId(session)).handleWebSocketDisconnection(session, status);
 		} catch (Exception e) {
-			log.error("Error after connection closed, " + e.getMessage());
+			log.warn("Error after connection closed, " + e.getMessage());
 		}
 	}
 

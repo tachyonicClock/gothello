@@ -2,14 +2,12 @@ package gothello.gothelloserver.rules;
 
 public interface Rules {
   enum Stone {
-    BLACK,
-    WHITE,
-    NONE
+    BLACK, WHITE, NONE
   }
 
-  // 
-  // Get Game State 
-  // 
+  //
+  // Get Game State
+  //
 
   // getSquare returns the stone at (x,y) on the board
   Stone getSquare(int x, int y);
@@ -33,9 +31,9 @@ public interface Rules {
   // isGameOver returns true if the game is finished
   boolean isGameOver();
 
-  // 
+  //
   // Change Game State
-  // 
+  //
 
   // pass skips a player's turn
   void pass(Stone player);

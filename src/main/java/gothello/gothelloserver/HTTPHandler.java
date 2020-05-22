@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import gothello.gothelloserver.messages.Message;
+import gothello.gothelloserver.messages.ErrorMessage;
+
 import org.slf4j.Logger;
 
 @RestController
@@ -13,39 +16,43 @@ import org.slf4j.Logger;
 public class HTTPHandler {
 	Logger log = LoggerFactory.getLogger(HTTPHandler.class);
 
-	
 	/**
-	* This endpoint will create a new game and return its game ID. This lets a
-	* client create a game if no open game exists. If it is a public game then it
-	* can be connected to through `/game/join` . If it is private the game link
-	* must be shared manually. This lets users play with who they want to by
-	* sharing the link.
-	*/
+	 * This endpoint will create a new game and return its game ID. This lets a
+	 * client create a game if no open game exists. If it is a public game then it
+	 * can be connected to through `/game/join` . If it is private the game link
+	 * must be shared manually. This lets users play with who they want to by
+	 * sharing the link.
+	 */
 	@GetMapping("/new")
-	public Response newGame(@RequestParam(value = "type", defaultValue = "public") String gameType) {
+	public Message newGame(@RequestParam(value = "type", defaultValue = "public") String gameType) {
 		Game game = new Game(Game.typeFromString(gameType));
 		App.allGames.put(game.id, game);
-		
+
 		// Add game to open games if the game is open (public and not full)
 		if (game.getOpen()) {
 			App.openGames.add(game);
 		}
+
+		log.info("[{}] '/game/new' create game", game.id);
 		return game;
 	}
-	
+
 	/**
-	* This endpoint will return a game that is open. This allows the client to
-	* connect with someone waiting for a game. If it does not find a game it
-	* returns an error
-	*/
+	 * This endpoint will return a game that is open. This allows the client to
+	 * connect with someone waiting for a game. If it does not find a game it
+	 * returns an error
+	 */
 	@GetMapping("/join")
-	public Response joinGame() {
+	public Message joinGame() {
 		if (App.openGames.size() == 0) {
-			return new ErrorResponse("Game not found, try making one");
+			log.warn("'/game/join' Game not found, try making one");
+			return new ErrorMessage("Game not found, try making one");
 		}
 		// Move the top game to the back of the queue and return it
 		Game game = App.openGames.remove();
 		App.openGames.add(game);
+
+		log.info("[{}] '/game/join' join game", game.id);
 		return game;
 	}
 }

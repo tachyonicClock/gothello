@@ -2,18 +2,32 @@ package gothello.gothelloserver;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+
+import gothello.gothelloserver.messages.ErrorMessage;
+import gothello.gothelloserver.messages.Message;
+import gothello.gothelloserver.messages.PlayStone;
+import gothello.gothelloserver.messages.GameState;
+import gothello.gothelloserver.rules.Rules;
+import gothello.gothelloserver.rules.SimpleRules;
 
 /**
  * Game represents a game match between two players. The game class is
  * responsible for both being the Games Resource representation (that is the
  * class that is transformed into JSON) and the handler for web-sockets.
  */
-public class Game extends Response {
+public class Game extends Message {
+	private final Logger log = LoggerFactory.getLogger(Game.class);
+
 	// The game id is used to refer to the Game
 	public final int id;
+
+	// rules is an interface allowing us to easily change the rule set
+	private final Rules rules = new SimpleRules();
 
 	/**
 	 * A Game can be considered PUBLIC or PRIVATE. If it is PUBLIC then you can get
@@ -44,42 +58,102 @@ public class Game extends Response {
 	private WebSocketSession black = null;
 	private WebSocketSession white = null;
 
-	// getOpen returns whether or not someone can join the game
-	public boolean getOpen() {
-		return (black != null && white != null && gameType == GameType.PUBLIC);
+	// getGameFull returns whether or not both players are in the game
+	public boolean getGameFull() {
+		return (black != null && white != null);
 	}
 
-	// This is a response of type "game" this communicates what sort of message
-	// it is to the client
-	@Override
-	public String getType() {
-		return "game";
+	// getOpen returns whether or not someone can join the game
+	public boolean getOpen() {
+		return (!getGameFull() && gameType == GameType.PUBLIC);
 	}
 
 	/**
-	 * Game is also responsible for managing the handlers for the websockets that
+	 * Game is also responsible for managing the handlers for the web-sockets that
 	 * the clients use to communicate with the server over.
 	 */
 
 	// handleWebSocketMessage is called whenever a new message is sent to the
 	// server over the websocket
 	public void handleWebSocketMessage(WebSocketSession session, TextMessage message) throws Exception {
-		System.out.println("\nWS New Message\n");
-		session.sendMessage(message);
+		Rules.Stone player = getPlayer(session);
+		String json = message.getPayload();
+
+		// Decide how to handle the message
+		switch (Util.getMessageType(json)) {
+			case "error":
+				ErrorMessage errorMsg = Util.<ErrorMessage>parseMessage(json, ErrorMessage.class);
+				log.error("[{}] {} - encountered an error, '{}'", id, player, errorMsg.errorMessage);
+				break;
+
+			case "playStone":
+				log.info("[{}] {} - played a stone", id, player);
+				PlayStone playStone = Util.<PlayStone>parseMessage(json, PlayStone.class);
+				playStone.makePlay(player, rules);
+				updateClientState();
+				break;
+
+			default:
+				break;
+		}
 	}
 
 	// handleWebSocketConnection is called when a new client connects for the
 	// first time
 	public void handleWebSocketConnection(WebSocketSession session) throws Exception {
-		System.out.println("\nWS New Connection\n");
+		if (black == null) {
+			black = session;
+			log.info("[{}] BLACK - joined the game", id);
+		} else if (white == null) {
+			white = session;
+			log.info("[{}] WHITE - joined the game", id);
+		} else {
+			log.warn("[{}] Game is full, kicking player", id);
+			Util.JSONMessage(session, new ErrorMessage("game is full, please join another game"));
+			session.close();
+			return;
+		}
+		if (getGameFull()) {
+			log.info("[{}] Starting game", id);
+			updateClientState();
+		}
 	}
 
 	// handleWebSocketDisconnection is called when a client disconnects.
 	public void handleWebSocketDisconnection(WebSocketSession session, CloseStatus status) throws Exception {
-		System.out.println("\nWS Disconnection\n");
+		Rules.Stone player = getPlayer(session);
+		log.info("[{}] {} - left the game", id, player);
+		switch (player) {
+			case WHITE:
+				white = null;
+				break;
+			case BLACK:
+				black = null;
+				break;
+			default:
+				break;
+		}
+	}
+
+	// Internal Methods
+
+	// updateClientState sends a unique game state object to each player
+	private void updateClientState() throws Exception {
+		Util.JSONMessage(black, new GameState(Rules.Stone.BLACK, rules));
+		Util.JSONMessage(white, new GameState(Rules.Stone.WHITE, rules));
+	}
+
+	// getPlayer compares the session ids to identify a message sender
+	private Rules.Stone getPlayer(WebSocketSession session) {
+		if (black != null && black.getId().equals(session.getId()))
+			return Rules.Stone.BLACK;
+		if (white != null && white.getId().equals(session.getId()))
+			return Rules.Stone.WHITE;
+		return Rules.Stone.NONE;
 	}
 
 	Game(final GameType gameType) {
+		super("game");
 		id = Math.abs(ThreadLocalRandom.current().nextInt());
 		this.gameType = gameType;
 	}

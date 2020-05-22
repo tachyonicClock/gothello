@@ -8,12 +8,23 @@ public class SimpleRules implements Rules {
   Stone[][] board = new Stone[8][8];
   private Stone currentTurn = Stone.BLACK;
 
-  SimpleRules() {
+  public SimpleRules() {
+    // Set board initial state
     for (int x = 0; x < board.length; x++) {
       for (int y = 0; y < board[x].length; y++) {
         board[x][y] = Stone.NONE;
       }
     }
+
+    board[1][1] = Stone.WHITE;
+    board[2][2] = Stone.WHITE;
+    board[1][2] = Stone.BLACK;
+    board[2][1] = Stone.BLACK;
+
+    board[5][6] = Stone.WHITE;
+    board[6][5] = Stone.WHITE;
+    board[5][5] = Stone.BLACK;
+    board[6][6] = Stone.BLACK;
   }
 
   //
@@ -75,6 +86,7 @@ public class SimpleRules implements Rules {
     if (!isLegal(x, y, player))
       return false;
     board[x][y] = player;
+    currentTurn = (currentTurn == Stone.BLACK ? Stone.WHITE : Stone.BLACK);
     return true;
   }
 
