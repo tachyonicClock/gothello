@@ -8,6 +8,7 @@ import Game from './Routes/Game';
 import Home from './Routes/Home';
 import { ThemeProvider } from '@material-ui/styles';
 import { createMuiTheme } from '@material-ui/core/styles';
+import { SnackbarProvider } from 'notistack';
 
 const theme = createMuiTheme({
   palette: {
@@ -33,19 +34,20 @@ const theme = createMuiTheme({
 // Routes the user to the right place and applies the theme
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <Router>
-        <Switch>
-          <Route path="/game">
-            <Game></Game>
-          </Route>
-          <Route path="/">
-            <Home></Home>
-          </Route>
-        </Switch>
-      </Router>
-    </ThemeProvider>
-
+    <SnackbarProvider>
+      <ThemeProvider theme={theme}>
+        <Router>
+          <Switch>
+            <Route path="/game/:gameId">
+              <Game></Game>
+            </Route>
+            <Route path="/">
+              <Home></Home>
+            </Route>
+          </Switch>
+        </Router>
+      </ThemeProvider>
+    </SnackbarProvider>
   );
 }
 
