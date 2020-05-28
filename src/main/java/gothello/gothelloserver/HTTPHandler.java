@@ -1,7 +1,9 @@
 package gothello.gothelloserver;
 
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +13,7 @@ import gothello.gothelloserver.messages.ErrorMessage;
 
 import org.slf4j.Logger;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/v0/game")
 public class HTTPHandler {
@@ -48,11 +51,35 @@ public class HTTPHandler {
 			log.warn("'/game/join' Game not found, try making one");
 			return new ErrorMessage("Game not found, try making one");
 		}
-		// Move the top game to the back of the queue and return it
+
 		Game game = App.openGames.remove();
+		while(game.getGameFull()){
+			game = App.openGames.remove();
+		}
+		// Move the top game to the back of the queue and return it
 		App.openGames.add(game);
 
 		log.info("[{}] '/game/join' join game", game.id);
 		return game;
+	}
+
+	// getGame gets the game based on its id
+	@GetMapping("/{id}")
+	public Message getGame(@PathVariable("id") int id) {
+		Game game  = App.allGames.get(id);
+		if (game == null) {
+			return new ErrorMessage("Game not found, did you use the correct ID?");
+		}
+		return game;
+	}
+
+	// getState gets a game's state based on its id
+	@GetMapping("/{id}/state")
+	public Message getState(@PathVariable("id") int id) {
+		Game game  = App.allGames.get(id);
+		if (game == null) {
+			return new ErrorMessage("Game not found, did you use the correct ID?");
+		}
+		return game.gameState();
 	}
 }

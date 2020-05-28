@@ -152,6 +152,11 @@ public class Game extends Message {
 		return Rules.Stone.NONE;
 	}
 
+	// GameState returns the game state for usage by an HTTP endpoint
+	public GameState gameState(){
+		return new GameState(rules.getTurn(), rules);
+	}
+
 	Game(final GameType gameType) {
 		super("game");
 		id = Math.abs(ThreadLocalRandom.current().nextInt());

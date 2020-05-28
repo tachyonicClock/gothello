@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 public class WSConfig implements WebSocketConfigurer {
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-		registry.addHandler(new WSHandler(), "/api/v0/games/*/socket").setAllowedOrigins("*")
+		registry.addHandler(new WSHandler(), "/api/v0/game/*/socket").setAllowedOrigins("*")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 	}
 }
