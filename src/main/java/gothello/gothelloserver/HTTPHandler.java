@@ -53,7 +53,7 @@ public class HTTPHandler {
 		}
 
 		Game game = App.openGames.remove();
-		if (game.getGameFull()) {
+		if (!game.getOpen()) {
 			return joinGame();
 		}
 		// Move the top game to the back of the queue and return it

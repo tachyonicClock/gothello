@@ -12,6 +12,8 @@ import gothello.gothelloserver.messages.ErrorMessage;
 import gothello.gothelloserver.messages.Message;
 import gothello.gothelloserver.messages.PlayStone;
 import gothello.gothelloserver.messages.GameState;
+import gothello.gothelloserver.messages.GameOver;
+
 import gothello.gothelloserver.rules.Rules;
 import gothello.gothelloserver.rules.SimpleRules;
 
@@ -59,12 +61,13 @@ public class Game extends Message {
 	private WebSocketSession white = null;
 
 	// getGameFull returns whether or not both players are in the game
-	public boolean getGameFull() {
+	private boolean getGameFull() {
 		return (black != null && white != null);
 	}
 
 	// getOpen returns whether or not someone can join the game
 	public boolean getOpen() {
+		if (rules.isGameOver()) return false;
 		return (!getGameFull() && gameType == GameType.PUBLIC);
 	}
 
@@ -90,12 +93,16 @@ public class Game extends Message {
 				log.info("[{}] {} - played a stone", id, player);
 				PlayStone playStone = Util.<PlayStone>parseMessage(json, PlayStone.class);
 				playStone.makePlay(player, rules);
-				updateClientState();
 				break;
-
+			case "pass":
+				rules.pass(player);
+				break;
+			case "resign":
+				rules.resign(player);
 			default:
 				break;
 		}
+		updateClientState();
 	}
 
 	// handleWebSocketConnection is called when a new client connects for the
@@ -141,6 +148,20 @@ public class Game extends Message {
 	private void updateClientState() throws Exception {
 		Util.JSONMessage(black, new GameState(Rules.Stone.BLACK, rules));
 		Util.JSONMessage(white, new GameState(Rules.Stone.WHITE, rules));
+
+		if (rules.isGameOver()) {
+			closeGame();
+		}
+	}
+
+	private void closeGame() throws Exception{
+		Util.JSONMessage(black, new GameOver(Rules.Stone.BLACK, rules));
+		Util.JSONMessage(white, new GameOver(Rules.Stone.WHITE, rules));
+		black.close();
+		white.close();
+		App.allGames.remove(id);
+		log.info("[{}] closing the game", id);
+
 	}
 
 	// getPlayer compares the session ids to identify a message sender

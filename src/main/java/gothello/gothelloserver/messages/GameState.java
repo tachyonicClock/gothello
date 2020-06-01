@@ -30,6 +30,9 @@ public class GameState extends Message {
           case NONE:
             board[x][y] = rules.isLegal(x, y, player) ? "L" : "I";
             break;
+          default:
+            board[x][y] = "X";
+            break;
         }
       }
     }

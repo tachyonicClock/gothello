@@ -21,7 +21,7 @@ public class GameOver extends Message {
     }
   }
 
-  GameOver(Rules.Stone player, Rules rules) {
+  public GameOver(Rules.Stone player, Rules rules) {
     super("gameOver");
     winner = rules.getWinner();
     scores = new Scores(rules.getScore(Rules.Stone.BLACK), rules.getScore(Rules.Stone.WHITE));

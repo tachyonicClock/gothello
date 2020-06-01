@@ -2,7 +2,7 @@ package gothello.gothelloserver.rules;
 
 public interface Rules {
   enum Stone {
-    BLACK, WHITE, NONE
+    BLACK, WHITE, DRAW, NONE
   }
 
   //
