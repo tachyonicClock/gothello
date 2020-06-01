@@ -30,6 +30,25 @@ code {
     monospace;
 }
 
+.GameMenu {
+  overflow: hidden;
+}
+
+.VerticalCenter {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.GameMenu .Controls {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 5px;
+  padding-bottom: 10px;
+}
+
 .Board {
   z-index: 1;
   position:relative;
@@ -128,7 +147,7 @@ code {
 
 .Logo {
   background-color: var(--pallette-light);
-  padding: 10px;
+  /* padding: 10px; */
 }
 
 

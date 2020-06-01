@@ -66,13 +66,17 @@ function Game(props) {
   return (
     <Grid container spacing={3} justify='center'>
       <Grid item xs={12} md={4} lg={4}>
-        <GameMenu></GameMenu>
+        <div className={"VerticalCenter"}>
+          <GameMenu></GameMenu>
+        </div>
       </Grid>
       <Grid item xs={12} sm={11} md={8} lg={6}>
+        <div className={"VerticalCenter"}>
         <Board onClick={cellClick}
           board={board}
           loading={loading}
           error={error}></Board>
+        </div>
       </Grid>
     </Grid>
   );
