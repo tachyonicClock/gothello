@@ -6,16 +6,21 @@ import { useParams, useHistory } from 'react-router-dom';
 import { SERVER_URL_WS } from '../Config';
 import { withSnackbar } from 'notistack';
 
+import placeSfx from '../Sound/place.mp3'
+import useSound from 'use-sound';
+
 
 function Game(props) {
 
-  let { gameId } = useParams();
+  var { gameId } = useParams();
   const history = useHistory();
-  let [ws, setWs] = useState(null)
-  let [error, setError] = useState(false)
-  let [loading, setLoading] = useState(true)
+  var [ws, setWs] = useState(null)
+  var [error, setError] = useState(false)
+  var [loading, setLoading] = useState(true)
   var [board, setBoard] = useState(null)
+  var [volume, setVolume] = useState(1)
   var [prompt, setPrompt] = useState("Waiting for player to join")
+  const [playPlaceSfx] = useSound(placeSfx, {"volume": volume});
 
   // This is a react hook it takes care of the websocket and their messages
   useEffect(() => {
@@ -44,7 +49,7 @@ function Game(props) {
         // We set the local state to match that of the server
         case "state":
           setBoard(msg.board)
-
+          playPlaceSfx()
           if (msg.yourTurn) {
             setPrompt("Your turn")
           } else {
@@ -69,7 +74,7 @@ function Game(props) {
           break;
       }
     }
-  }, [ws, gameId, props, loading, error])
+  }, [ws, gameId, props, loading, error, playPlaceSfx])
 
   // CellClick tells the server that the player wants to play a stone
   function cellClick(e) {
@@ -104,7 +109,7 @@ function Game(props) {
     <Grid container spacing={3} justify='center'>
       <Grid item xs={12} md={4} lg={4}>
         <div className={"VerticalCenter"}>
-          <GameMenu passTurn={passTurn} resignGame={resignGame} prompt={prompt}></GameMenu>
+          <GameMenu volume={volume} volumeChange={(e, v)=>{setVolume(v)}} passTurn={passTurn} resignGame={resignGame} prompt={prompt}></GameMenu>
         </div>
       </Grid>
       <Grid item xs={12} sm={11} md={8} lg={6}>

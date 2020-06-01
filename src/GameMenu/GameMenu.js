@@ -44,7 +44,7 @@ function GameMenu(props) {
               <VolumeDown />
             </Grid>
             <Grid item xs>
-              <Slider aria-labelledby="continuous-slider" />
+              <Slider step={0.1} min={0} max={1} value={props.volume} onChange={props.volumeChange} aria-labelledby="continuous-slider" />
             </Grid>
             <Grid item>
               <VolumeUp />
