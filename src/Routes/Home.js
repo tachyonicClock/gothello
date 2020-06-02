@@ -48,7 +48,7 @@ function Home(props) {
       justify="center"
       direction="column">
       <Grid item>
-        <Grid item xs={6}>
+        <Grid item xs={12} md={6}>
           <div className={"Splash"}>
             <img className={"Logo"} src={logo} alt="Gothello the game" width="100%"></img>
             <p>A legendary mashup of Go and Othello</p>

@@ -6,6 +6,7 @@ import { useParams, useHistory } from 'react-router-dom';
 import { SERVER_URL_WS } from '../Config';
 import { withSnackbar } from 'notistack';
 
+// https://freesound.org/s/437484/ Sound by BiancaBothaPure CC BY-NC 3.0
 import placeSfx from '../Sound/place.mp3'
 import useSound from 'use-sound';
 
@@ -64,7 +65,7 @@ function Game(props) {
           if (msg.isWinner) {
             setPrompt("You win, you did good")
           } else if (msg.winner === "DRAW") {
-            setPrompt("You happy, no one wins")
+            setPrompt("Draw")
           } else {
             setPrompt("You lost, you'll get there")
           }

@@ -138,6 +138,7 @@ code {
 .Splash {
   background-color: var(--pallette-lightest);
   border-radius: 12px;
+  margin-top: -200px;
   box-shadow: var(--shadow);
   overflow: hidden;
   padding-bottom: 10px;
