@@ -26,4 +26,4 @@ mvn install
 
 You should now be able to connect to the server now.
 
-http://localhost:8080/greeting
+http://localhost:8080/api/v0/game/new
