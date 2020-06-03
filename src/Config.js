@@ -1,2 +1,2 @@
-export const SERVER_URL = "http://localhost:8080/api/v0"
-export const SERVER_URL_WS = "ws://localhost:8080/api/v0"
+export const SERVER_URL = process.env.REACT_APP_GOTHELLO_API
+export const SERVER_URL_WS = process.env.REACT_APP_GOTHELLO_WS_API

@@ -9,6 +9,7 @@ import Home from './Routes/Home';
 import { ThemeProvider } from '@material-ui/styles';
 import { createMuiTheme } from '@material-ui/core/styles';
 import { SnackbarProvider } from 'notistack';
+import { SERVER_URL, SERVER_URL_WS } from './Config';
 
 const theme = createMuiTheme({
   palette: {
@@ -33,6 +34,7 @@ const theme = createMuiTheme({
 
 // Routes the user to the right place and applies the theme
 function App() {
+  console.log("Connecting to endpoints", SERVER_URL, SERVER_URL_WS)
   return (
     <SnackbarProvider>
       <ThemeProvider theme={theme}>
