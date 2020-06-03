@@ -1,0 +1,15 @@
+version: "3.3"
+services:
+  backend:
+    image: tachyonic/gothello:server-41ee5e7
+
+  client:
+    image: tachyonic/gothello:client-3f4bf16
+# 
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
