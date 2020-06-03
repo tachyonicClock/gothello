@@ -22,20 +22,20 @@ public class GameControllerTest {
 	@Test
 	public void createPublicGame() throws Exception {
 		this.mockMvc.perform(get("/api/v0/game/new")).andDo(print()).andExpect(status().isOk())
-				.andExpect(jsonPath("$.ok").value("true")).andExpect(jsonPath("$.type").value("game"))
-				.andExpect(jsonPath("$.open").value(true)).andExpect(jsonPath("$.gameType").value("PUBLIC"));
+				.andExpect(jsonPath("$.messageType").value("game")).andExpect(jsonPath("$.open").value(true))
+				.andExpect(jsonPath("$.gameType").value("PUBLIC"));
 	}
 
 	@Test
 	public void createPrivateGame() throws Exception {
 		this.mockMvc.perform(get("/api/v0/game/new?type=private")).andDo(print()).andExpect(status().isOk())
-				.andExpect(jsonPath("$.ok").value("true")).andExpect(jsonPath("$.type").value("game"))
-				.andExpect(jsonPath("$.open").value(false)).andExpect(jsonPath("$.gameType").value("PRIVATE"));
+				.andExpect(jsonPath("$.messageType").value("game")).andExpect(jsonPath("$.open").value(false))
+				.andExpect(jsonPath("$.gameType").value("PRIVATE"));
 	}
 
 	@Test
 	public void joinFail() throws Exception {
 		this.mockMvc.perform(get("/api/v0/game/join")).andDo(print()).andExpect(status().isOk())
-				.andExpect(jsonPath("$.ok").value("false")).andExpect(jsonPath("$.type").value("error"));
+				.andExpect(jsonPath("$.messageType").value("error"));
 	}
 }
