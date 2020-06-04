@@ -27,6 +27,7 @@ public class WSHandler extends TextWebSocketHandler {
 		try {
 			return Integer.parseInt(session.getUri().getPath().split("/")[4]);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new Exception("Path variable 'id' not found");
 		}
 	}
@@ -46,6 +47,7 @@ public class WSHandler extends TextWebSocketHandler {
 		try {
 			getGame(getGameId(session)).handleWebSocketMessage(session, message);
 		} catch (Exception e) {
+			e.printStackTrace();
 			Util.JSONMessage(session, new ErrorMessage(e.getMessage()));
 			log.warn("Error on message received, " + e.getMessage() + ", " + e.getClass());
 		}
@@ -58,6 +60,7 @@ public class WSHandler extends TextWebSocketHandler {
 		try {
 			getGame(getGameId(session)).handleWebSocketConnection(session);
 		} catch (Exception e) {
+			e.printStackTrace();
 			Util.JSONMessage(session, new ErrorMessage(e.getMessage()));
 			log.warn("Error after connection established, " + e.getMessage());
 		}
@@ -70,6 +73,7 @@ public class WSHandler extends TextWebSocketHandler {
 		try {
 			getGame(getGameId(session)).handleWebSocketDisconnection(session, status);
 		} catch (Exception e) {
+			e.printStackTrace();
 			log.warn("Error after connection closed, " + e.getMessage());
 		}
 	}
