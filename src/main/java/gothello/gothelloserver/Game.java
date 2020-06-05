@@ -8,14 +8,8 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import gothello.gothelloserver.messages.ErrorMessage;
-import gothello.gothelloserver.messages.Message;
-import gothello.gothelloserver.messages.PlayStone;
-import gothello.gothelloserver.messages.GameState;
-import gothello.gothelloserver.messages.GameOver;
-
-import gothello.gothelloserver.rules.Rules;
-import gothello.gothelloserver.rules.SimpleRules;
+import gothello.gothelloserver.messages.*;
+import gothello.gothelloserver.rules.*;
 
 /**
  * Game represents a game match between two players. The game class is
@@ -29,7 +23,7 @@ public class Game extends Message {
 	public final int id;
 
 	// rules is an interface allowing us to easily change the rule set
-	private final Rules rules = new SimpleRules();
+	private final Rules rules = new GothelloRules();
 
 	/**
 	 * A Game can be considered PUBLIC or PRIVATE. If it is PUBLIC then you can get
