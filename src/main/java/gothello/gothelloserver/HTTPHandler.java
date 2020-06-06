@@ -37,6 +37,7 @@ public class HTTPHandler {
 		}
 
 		log.info("[{}] '/game/new' create game", game.id);
+		log.info("{} games, {} open games", App.allGames.size(), App.openGames.size());
 		return game;
 	}
 

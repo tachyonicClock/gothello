@@ -25,6 +25,9 @@ public class Game extends Message {
 	// rules is an interface allowing us to easily change the rule set
 	private final Rules rules = new GothelloRules();
 
+	// gameInProgress is set to true when the game starts
+	private Boolean gameInProgress = false;
+
 	/**
 	 * A Game can be considered PUBLIC or PRIVATE. If it is PUBLIC then you can get
 	 * the id through the api. Otherwise the host must share the game URL.
@@ -54,15 +57,16 @@ public class Game extends Message {
 	private WebSocketSession black = null;
 	private WebSocketSession white = null;
 
-	// getGameFull returns whether or not both players are in the game
-	private boolean getGameFull() {
+	// isGameFull returns whether or not both players are in the game
+	private boolean isGameFull() {
 		return (black != null && white != null);
 	}
 
 	// getOpen returns whether or not someone can join the game
 	public boolean getOpen() {
-		if (rules.isGameOver()) return false;
-		return (!getGameFull() && gameType == GameType.PUBLIC);
+		if (rules.isGameOver())
+			return false;
+		return (gameType == GameType.PUBLIC && !gameInProgress);
 	}
 
 	/**
@@ -78,11 +82,6 @@ public class Game extends Message {
 
 		// Decide how to handle the message
 		switch (Util.getMessageType(json)) {
-			case "error":
-				ErrorMessage errorMsg = Util.<ErrorMessage>parseMessage(json, ErrorMessage.class);
-				log.error("[{}] {} - encountered an error, '{}'", id, player, errorMsg.errorMessage);
-				break;
-
 			case "playStone":
 				log.info("[{}] {} - played a stone", id, player);
 				PlayStone playStone = Util.<PlayStone>parseMessage(json, PlayStone.class);
@@ -105,17 +104,28 @@ public class Game extends Message {
 		if (black == null) {
 			black = session;
 			log.info("[{}] BLACK - joined the game", id);
+
+			// Let the client know black joined the game
+			if (white != null)
+				Util.JSONMessage(white, new ShowStatus(ShowStatus.Variant.SUCCESS, "Black has connected"));
+
 		} else if (white == null) {
 			white = session;
 			log.info("[{}] WHITE - joined the game", id);
+
+			// Let the client know white has joined the game
+			if (black != null)
+				Util.JSONMessage(black, new ShowStatus(ShowStatus.Variant.SUCCESS, "White has connected"));
+
 		} else {
 			log.warn("[{}] Game is full, kicking player", id);
 			Util.JSONMessage(session, new ErrorMessage("game is full, please join another game"));
 			session.close();
 			return;
 		}
-		if (getGameFull()) {
+		if (isGameFull()) {
 			log.info("[{}] Starting game", id);
+			gameInProgress = true;
 			updateClientState();
 		}
 	}
@@ -127,9 +137,18 @@ public class Game extends Message {
 		switch (player) {
 			case WHITE:
 				white = null;
+
+				// Let black know white disconnected
+				if (black != null)
+					Util.JSONMessage(black, new ShowStatus(ShowStatus.Variant.INFO, "White has lost connection"));
+
 				break;
 			case BLACK:
 				black = null;
+
+				// Let white know black disconnected
+				if (white != null)
+					Util.JSONMessage(white, new ShowStatus(ShowStatus.Variant.INFO, "Black has lost connection"));
 				break;
 			default:
 				break;
@@ -148,14 +167,13 @@ public class Game extends Message {
 		}
 	}
 
-	private void closeGame() throws Exception{
+	private void closeGame() throws Exception {
 		Util.JSONMessage(black, new GameOver(Rules.Stone.BLACK, rules));
 		Util.JSONMessage(white, new GameOver(Rules.Stone.WHITE, rules));
 		black.close();
 		white.close();
 		App.allGames.remove(id);
 		log.info("[{}] closing the game", id);
-
 	}
 
 	// getPlayer compares the session ids to identify a message sender
@@ -168,7 +186,7 @@ public class Game extends Message {
 	}
 
 	// GameState returns the game state for usage by an HTTP endpoint
-	public GameState gameState(){
+	public GameState gameState() {
 		return new GameState(rules.getTurn(), rules);
 	}
 
