@@ -18,7 +18,7 @@ function Game(props) {
   var [ws, setWs] = useState(null)
   var [error, setError] = useState(false)
   var [loading, setLoading] = useState(true)
-  var [board, setBoard] = useState(null)
+  var [gameState, setGameState] = useState(null)
   var [volume, setVolume] = useState(1)
   var [prompt, setPrompt] = useState("Waiting for player to join")
   const [playPlaceSfx] = useSound(placeSfx, {"volume": volume});
@@ -42,14 +42,16 @@ function Game(props) {
       switch (msg.messageType) {
 
         // Something went wrong!
-        case "error":
-          props.enqueueSnackbar(msg.errorMessage, { variant: 'error' });
-          setError(true)
+        case "status":
+          props.enqueueSnackbar(msg.message, { variant: msg.variant.toLowerCase() });
+          if (props.variant === "ERROR") {
+            setError(true)
+          }
           break;
 
         // We set the local state to match that of the server
         case "state":
-          setBoard(msg.board)
+          setGameState(msg)
           playPlaceSfx()
           if (msg.yourTurn) {
             setPrompt("Your turn")
@@ -75,7 +77,15 @@ function Game(props) {
           break;
       }
     }
+
+    // closes the websocket when they push the back button
+    window.onpopstate  = (e) => {
+      if (ws !== null){
+        ws.close()
+      }
+    }
   }, [ws, gameId, props, loading, error, playPlaceSfx])
+
 
   // CellClick tells the server that the player wants to play a stone
   function cellClick(e) {
@@ -110,13 +120,19 @@ function Game(props) {
     <Grid container spacing={3} justify='center'>
       <Grid item xs={12} md={4} lg={4}>
         <div className={"VerticalCenter"}>
-          <GameMenu volume={volume} volumeChange={(e, v)=>{setVolume(v)}} passTurn={passTurn} resignGame={resignGame} prompt={prompt}></GameMenu>
+          <GameMenu 
+            volume={volume}
+            volumeChange={(e, v)=>{setVolume(v)}}
+            passTurn={passTurn}
+            resignGame={resignGame}
+            prompt={prompt}
+            stone={(gameState? gameState.turn : null)}></GameMenu>
         </div>
       </Grid>
       <Grid item xs={12} sm={11} md={8} lg={6}>
         <div className={"VerticalCenter"}>
           <Board onClick={cellClick}
-            board={board}
+            board={(gameState? gameState.board : null)}
             loading={loading}
             error={error}></Board>
         </div>

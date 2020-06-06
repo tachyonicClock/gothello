@@ -47,6 +47,22 @@ code {
   padding-right: 20px;
   padding-top: 5px;
   padding-bottom: 10px;
+  
+}
+
+.GameMenu .Prompt {
+  margin: 1vh;
+  padding: 1vh;
+  border: thin var(--pallette-darkest) solid;
+  border-radius: 10px;
+}
+.GameMenu .Prompt.black {
+  background-color: var(--pallette-dark);
+  color: var(--pallette-lightest);
+}
+.GameMenu .Prompt.white {
+  background-color: var(--pallette-light);
+  color: var(--pallette-darkest);
 }
 
 .Board {
@@ -146,6 +162,10 @@ code {
 
 .Logo {
   background-color: var(--pallette-light);
+  width: calc(80%);
+  padding-left: 10%;
+  padding-right: 10%;
+
   /* padding: 10px; */
 }
 

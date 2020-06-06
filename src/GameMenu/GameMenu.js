@@ -13,12 +13,14 @@ function GameMenu(props) {
   return (
     <Paper className="GameMenu">
       {/* Logo */}
-      <img className={"Logo"} src={logo} alt="Gothello the game" width="100%" />
+      <img className={"Logo"} src={logo} alt="Gothello the game" />
 
       {/* Prompt */}
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <h2 style={{ "textAlign": "center" }}>{props.prompt}</h2>
+            <h2 
+            className={"Prompt " + (props.stone? props.stone.toLowerCase() : "")}
+            style={{ "textAlign": "center" }}>{props.prompt}</h2>
         </Grid>
       </Grid>
 

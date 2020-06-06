@@ -29,7 +29,7 @@ function Home(props) {
 
   function handleJoinGame() {
     Axios.get(SERVER_URL + "/game/join").then(({ data }) => {
-      if (data.messageType === "error") {
+      if (data.messageType === "status" && data.variant === "ERROR" ) {
         makeGame("public")
       } else {
         gotoGame(data)
