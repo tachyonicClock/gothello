@@ -25,7 +25,7 @@ function Game(props) {
 
 
 
-
+  
   // This is a react hook it takes care of the websocket and their messages
   useEffect(() => {
     if (ws == null) {
@@ -34,15 +34,20 @@ function Game(props) {
     }
     // Report Error lets the user know that something went wrong
     var reportError = e => {
+      if (error) return
       props.enqueueSnackbar("Connection failed, try refreshing", { variant: 'error' })
       setError(true)
     }
+    var leaveGame = e => {
+      props.enqueueSnackbar("Left game", { variant: 'info' })
+    }
     ws.onerror = reportError
+    ws.onclose = leaveGame
 
     // keepWSAlive keeps the websocket from disconnecting because of inactivity
     function keepWSAlive() {
       var timeout = 20000;  
-      if (ws.readyState === ws.OPEN) ws.send('{"messageType":"keepAlive"}')  
+      if (ws.readyState === ws.OPEN) ws.send('{"messageType":"keepAlive"}')
       setTimeout(keepWSAlive, timeout); 
     }
     keepWSAlive();
@@ -54,9 +59,11 @@ function Game(props) {
 
         // Something went wrong!
         case "status":
+          console.error(msg.message)
           props.enqueueSnackbar(msg.message, { variant: msg.variant.toLowerCase() });
-          if (props.variant === "ERROR") {
+          if (msg.variant === "ERROR") {
             setError(true)
+            ws.close()
           }
           break;
 
