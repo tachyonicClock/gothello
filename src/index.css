@@ -160,6 +160,13 @@ code {
   padding-bottom: 10px;
 }
 
+.About {
+  background-color: var(--pallette-lightest);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  padding: 2vw;
+}
+
 .Logo {
   background-color: var(--pallette-light);
   width: calc(80%);

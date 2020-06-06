@@ -64,6 +64,8 @@ function Home(props) {
               type="number"
             />
             <Button style={{ "margin": "5px" }} onClick={handleJoinById} color="secondary" >Go</Button>
+            <hr />
+            <Button onClick={()=>(history.push("/about"))}>about game</Button>
           </div>
         </Grid>
       </Grid>

@@ -10,6 +10,7 @@ import { ThemeProvider } from '@material-ui/styles';
 import { createMuiTheme } from '@material-ui/core/styles';
 import { SnackbarProvider } from 'notistack';
 import { SERVER_URL, SERVER_URL_WS } from './Config';
+import About from './Routes/About';
 
 const theme = createMuiTheme({
   palette: {
@@ -42,6 +43,9 @@ function App() {
           <Switch>
             <Route path="/game/:gameId">
               <Game></Game>
+            </Route>
+            <Route path="/about">
+              <About></About>
             </Route>
             <Route path="/">
               <Home></Home>
