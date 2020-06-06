@@ -21,7 +21,8 @@ public class GothelloRules implements Rules {
   //Set up lists used by methods
   ArrayList<Point> toFlip = new ArrayList<Point>();
   ArrayList<Point> previousPieces = new ArrayList<Point>();
-
+  int whiteCaptures = 0;
+  int blackCaptures = 0;
 
   public GothelloRules() {
     // Set board initial state
@@ -74,7 +75,25 @@ public class GothelloRules implements Rules {
 
   // getScore returns the score of the specified player
   public int getScore(Stone player) {
-    return 0;
+    int score = 0;
+    //For each square on the board
+    for (int x = 0; x < board.length; x++) {
+      for (int y = 0; y < board[x].length; y++) {
+        //If the current square on the board is the same as the player add one to the score
+        if(board[x][y] == player){
+          score++;
+        }
+      }
+    }
+    if(player == Stone.BLACK){
+      return score+blackCaptures;
+    }
+    else if(player == Stone.WHITE){
+      return score+whiteCaptures;
+    }
+    else{
+      return 0;
+    }
   }
 
   // getBoardSize returns the size of a square board
@@ -175,14 +194,14 @@ public class GothelloRules implements Rules {
               break;
             case 3:
               dir[0] = 0;
-              dir[1] = 1;
+              dir[1] = 1; 
               break;
           }
           //If adjacent piece is in the board
           if(inBounds(x+dir[0], y+dir[1])){
             previousPieces.clear();
             //If adjacent piece has one liberty and is opposing and is in go quadrant
-            if (getSquare(x + dir[0], y + dir[1]) != player && libertyCount(x + dir[0], y + dir[1], player) == 1 && ((x >= boardSize/2 && y < boardSize/2) || (x < boardSize/2 && y >= boardSize/2))){
+            if ((getSquare(x + dir[0], y + dir[1]) != player) && libertyCount(x + dir[0], y + dir[1], ((player == Stone.BLACK) ? Stone.WHITE:Stone.BLACK)) == 1 && ((x+dir[0] >= boardSize/2 && y+dir[0] < boardSize/2) || (x+dir[0] < boardSize/2 && y+dir[1] >= boardSize/2))){
               return true;
             }
           }
@@ -209,7 +228,7 @@ public class GothelloRules implements Rules {
           }
           if(inBounds(x+dir[0], y+dir[1])){
             //If adjacent piece is in Othello Quadrant and opposing
-            if ((getSquare(x+dir[0], y+dir[1]) != player) && (x+dir[0] < boardSize/2 && y+dir[1] < boardSize/2) || (x+dir[0] >= boardSize/2 && y+dir[1]>= boardSize/2)){
+            if ((getSquare(x+dir[0], y+dir[1]) != player) && ((x+dir[0] < boardSize/2 && y+dir[1] < boardSize/2) || (x+dir[0] >= boardSize/2 && y+dir[1]>= boardSize/2))){
               //If the piece is in the toFlip list
               Point currentStoneCoords = new Point(x+dir[0], y+dir[1]);
               for(int k = 0; k < toFlip.size(); k++){
@@ -342,6 +361,19 @@ public class GothelloRules implements Rules {
     return (winner != Stone.NONE);
   }
 
+  //addCaptures adds one to captures of the right colour based on piece being captured
+  private void addCaptures(int x, int y){
+    //If the piece getting captured is black
+    if(getSquare(x, y) == Stone.BLACK){
+      //Add one to white captures
+      whiteCaptures++;
+    }
+    //
+    else{
+      blackCaptures++;
+    }
+  }
+
   //
   // Change Game State
   //
@@ -401,13 +433,15 @@ public class GothelloRules implements Rules {
         //If the adjacent piece is a gothello piece and has 0 liberties
         if (((x+dir[0] >= boardSize/2 && y+dir[1] < boardSize/2) || (x+dir[0] < boardSize/2 && y+dir[1]>= boardSize/2)) && (getSquare(x+dir[0], y+dir[1]) != player) && (libertyCount(x+dir[0], y+dir[1], ((player == Stone.BLACK) ? Stone.WHITE:Stone.BLACK)) == 0)){
           //For each piece that the stone being removed checked
-          for(int k = 0; k < previousPieces.size()-1; k++){
+          for(int k = 1; k < previousPieces.size()-1; k++){
             //If it is the same type as the stone being removed and is in go quadrant as well
-            if(((previousPieces.get(k+1).x >= boardSize/2 && previousPieces.get(k+1).y < boardSize/2) || (previousPieces.get(k+1).x < boardSize/2 && previousPieces.get(k+1).y >= boardSize/2)) && getSquare(x+dir[0],y+dir[1]) == getSquare(previousPieces.get(k+1).x,previousPieces.get(k+1).y)){
+            if(((previousPieces.get(k).x >= boardSize/2 && previousPieces.get(k).y < boardSize/2) || (previousPieces.get(k).x < boardSize/2 && previousPieces.get(k).y >= boardSize/2)) && getSquare(x+dir[0],y+dir[1]) == getSquare(previousPieces.get(k).x,previousPieces.get(k).y)){
+              addCaptures(previousPieces.get(k).x, previousPieces.get(k).y);
               //Remove the stone
-              board[previousPieces.get(k+1).x][previousPieces.get(k+1).y] = Stone.NONE;
+              board[previousPieces.get(k).x][previousPieces.get(k).y] = Stone.NONE;
             }
           }
+          addCaptures(x+dir[0],y+dir[1]);
           board[x+dir[0]][y+dir[1]] = Stone.NONE;
         }
 
@@ -446,15 +480,18 @@ public class GothelloRules implements Rules {
           previousPieces.clear();
           if((libertyCount((toFlip.get(i).x)+dir[0], (toFlip.get(i).y)+dir[1], (player == Stone.BLACK) ? Stone.WHITE:Stone.BLACK) == 0)){
             //For each piece that the stone shares a colour with
-            for(int j = 0; j < previousPieces.size(); j++){
+            for(int j = 1; j < previousPieces.size()-1; j++){
               //If the current stone shares a colour with the stone to be removed and is in the go quadrant
-              if(((toFlip.get(i).x+dir[0] >= boardSize/2 && toFlip.get(i).y+dir[1] < boardSize/2) || (toFlip.get(i).x+dir[0] < boardSize/2 && toFlip.get(i).y+dir[1] >= boardSize/2)) && getSquare(previousPieces.get(j).x, previousPieces.get(j).y) != getSquare(toFlip.get(i).x+dir[0], toFlip.get(i).y+dir[1])){
+              if(((previousPieces.get(j).x >= boardSize/2 && previousPieces.get(j).y < boardSize/2) || (previousPieces.get(j).x < boardSize/2 && previousPieces.get(j).y >= boardSize/2)) && getSquare(previousPieces.get(j).x, previousPieces.get(j).y) == getSquare(toFlip.get(i).x+dir[0], toFlip.get(i).y+dir[1])){
+                //Add one to the captures
+                addCaptures(previousPieces.get(j).x,previousPieces.get(j).y);
                 //Remove the the piece
                 board[previousPieces.get(j).x][previousPieces.get(j).y] = Stone.NONE;
               }
             }
             //If the stone is in the go quadrant
             if (((toFlip.get(i).x+dir[0] >= boardSize/2 && toFlip.get(i).y+dir[1] < boardSize/2) || (toFlip.get(i).x+dir[0] < boardSize/2 && toFlip.get(i).y+dir[1] >= boardSize/2))){
+              addCaptures(toFlip.get(i).x+dir[0], toFlip.get(i).y+dir[1]);
               board[toFlip.get(i).x+dir[0]][toFlip.get(i).y+dir[1]] = Stone.NONE;
             }
           }
