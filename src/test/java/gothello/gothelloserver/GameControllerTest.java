@@ -36,6 +36,6 @@ public class GameControllerTest {
 	@Test
 	public void joinFail() throws Exception {
 		this.mockMvc.perform(get("/api/v0/game/join")).andDo(print()).andExpect(status().isOk())
-				.andExpect(jsonPath("$.messageType").value("error"));
+				.andExpect(jsonPath("$.messageType").value("status"));
 	}
 }
