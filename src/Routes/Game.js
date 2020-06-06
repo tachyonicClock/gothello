@@ -23,6 +23,9 @@ function Game(props) {
   var [prompt, setPrompt] = useState("Waiting for player to join")
   const [playPlaceSfx] = useSound(placeSfx, {"volume": volume});
 
+
+
+
   // This is a react hook it takes care of the websocket and their messages
   useEffect(() => {
     if (ws == null) {
@@ -35,6 +38,14 @@ function Game(props) {
       setError(true)
     }
     ws.onerror = reportError
+
+    // keepWSAlive keeps the websocket from disconnecting because of inactivity
+    function keepWSAlive() {
+      var timeout = 20000;  
+      if (ws.readyState === ws.OPEN) ws.send('{"messageType":"keepAlive"}')  
+      setTimeout(keepWSAlive, timeout); 
+    }
+    keepWSAlive();
 
     // Handles the messages that get sent
     ws.onmessage = e => {
@@ -80,9 +91,7 @@ function Game(props) {
 
     // closes the websocket when they push the back button
     window.onpopstate  = (e) => {
-      if (ws !== null){
-        ws.close()
-      }
+      if (ws.readyState === ws.OPEN) ws.close()
     }
   }, [ws, gameId, props, loading, error, playPlaceSfx])
 
