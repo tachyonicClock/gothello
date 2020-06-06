@@ -82,6 +82,8 @@ public class Game extends Message {
 
 		// Decide how to handle the message
 		switch (Util.getMessageType(json)) {
+			case "keepAlive":
+				return;
 			case "playStone":
 				log.info("[{}] {} - played a stone", id, player);
 				PlayStone playStone = Util.<PlayStone>parseMessage(json, PlayStone.class);
