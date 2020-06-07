@@ -200,6 +200,10 @@ public class GothelloRules implements Rules {
           //If adjacent piece is in the board
           if(inBounds(x+dir[0], y+dir[1])){
             previousPieces.clear();
+            //Add in the pieces to be flipped so that libertyCount acts as though they already have been flipped, for accuracy
+            for(int j = 0; j < toFlip.size(); j++){
+              previousPieces.add(toFlip.get(j));  
+            }
             //If adjacent piece has one liberty and is opposing and is in go quadrant
             if ((getSquare(x + dir[0], y + dir[1]) != player) && libertyCount(x + dir[0], y + dir[1], ((player == Stone.BLACK) ? Stone.WHITE:Stone.BLACK)) == 1 && ((x+dir[0] >= boardSize/2 && y+dir[0] < boardSize/2) || (x+dir[0] < boardSize/2 && y+dir[1] >= boardSize/2))){
               return true;
@@ -489,8 +493,8 @@ public class GothelloRules implements Rules {
                 board[previousPieces.get(j).x][previousPieces.get(j).y] = Stone.NONE;
               }
             }
-            //If the stone is in the go quadrant
-            if (((toFlip.get(i).x+dir[0] >= boardSize/2 && toFlip.get(i).y+dir[1] < boardSize/2) || (toFlip.get(i).x+dir[0] < boardSize/2 && toFlip.get(i).y+dir[1] >= boardSize/2))){
+            //If the stone is in the go quadr ant and isn't the same as the player
+            if (((toFlip.get(i).x+dir[0] >= boardSize/2 && toFlip.get(i).y+dir[1] < boardSize/2) || (toFlip.get(i).x+dir[0] < boardSize/2 && toFlip.get(i).y+dir[1] >= boardSize/2)) && (getSquare(toFlip.get(i).x+dir[0], toFlip.get(i).y+dir[1]) != player)){
               addCaptures(toFlip.get(i).x+dir[0], toFlip.get(i).y+dir[1]);
               board[toFlip.get(i).x+dir[0]][toFlip.get(i).y+dir[1]] = Stone.NONE;
             }
