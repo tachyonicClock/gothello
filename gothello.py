@@ -4,6 +4,7 @@ import json
 import numpy as np
 import requests
 import itertools
+import time
 
 
 
@@ -16,6 +17,11 @@ class ShouldPass(Exception):
 
 
 class GothelloPlayer:
+    
+    turn_limit = 100
+
+    eval_time = None
+
     state = {}
     board_width = 8
     board_size = 64
@@ -34,6 +40,7 @@ class GothelloPlayer:
         return i % self.board_width, i // self.board_width
 
     def output_layer_to_move(self, state, output_layer: np.ndarray):
+        output_layer = np.array(output_layer) 
         '''output_layer_to_move takes the most activated neuron and interprets it as a move'''
         ordered_index = output_layer.argsort()
         for i in ordered_index[::-1]:
@@ -85,18 +92,26 @@ class GothelloPlayer:
     async def passTurn(self):
         await self.websocket.send(json.dumps({"messageType": "pass"}))
 
-    async def run_model(self, state):
+    async def play_turn(self, state):
+        self.turn_number = state["turnNumber"]
+
+        if self.turn_number > self.turn_limit:
+            await self.passTurn()
+            return
+
         try:
             if state["yourTurn"]:
-                # await asyncio.sleep(0.1)
-                # self.print_board(state)
-
                 # RUN TRAINED MODEL AS CALLBACK
+                start = time.time()
                 output_layer = self.model(self.get_input_layer(state))
+                end = time.time()
+
+                if self.eval_time == None:
+                    self.eval_time = end-start
+                else:
+                    self.eval_time = ((end-start)+self.eval_time)/2
 
                 x, y = self.output_layer_to_move(state, output_layer)
-
-                # print("Making Play", x, y)
                 await self.playStone(x, y)
         except ShouldPass as err:
             # print("Passed Turn")
@@ -106,8 +121,7 @@ class GothelloPlayer:
     async def handle_message(self, msg):
         message_type = msg["messageType"]
         if message_type == "state":
-            self.turn_number = msg["turnNumber"]
-            await self.run_model(msg)
+            await self.play_turn(msg)
         elif message_type == "status":
             if msg["variant"] != "INFO" and msg["variant"] != "SUCCESS":
                 print("Server Status:", msg["variant"], msg["message"])
@@ -121,12 +135,9 @@ class GothelloPlayer:
             print("Unknown Message: ", msg)
 
     async def start(self):
-        try:
-            while not self.is_game_over:
-                message = await self.websocket.recv()
-                await self.handle_message(json.loads(message))
-        except websockets.exceptions.ConnectionClosedOK as err:
-            pass
+        while not self.is_game_over:
+            message = await self.websocket.recv()
+            await self.handle_message(json.loads(message))
 
     async def connect_to_ws(self):
         self.websocket = await websockets.connect(self.endpoint)
@@ -151,16 +162,21 @@ class GothelloGame():
     def get_endpoint(self):
         return WS_ENDPOINT + "/game/" + str(self.id) + "/socket"
 
+    async def play_against_human(self):
+        self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.model_a)
+        print("game has started!", self.id)
+        await self.player_a.start()
+
     async def play_game(self):
         self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.model_a)
         self.player_b = await GothelloPlayer.create(self.get_endpoint(), self.model_b)
         await asyncio.gather(self.player_a.start(), self.player_b.start())
-        print("[{:10d}] Played Game, model {:2s} won, # turns {}".format(self.id, self.get_winner(), self.player_a.turn_number))
+        print("[{:10d}] Played Game, model {:2s} won, # turns {}".format(self.id, self.get_winner(), self.player_a.turn_number, self.player_a.eval_time))
         return self.get_winner()
 
     def get_winner(self):
         if not self.player_a.is_game_over:
-            raise Exception("Game not over")
+            raise Exception("Game Not Over")
         if self.player_a.is_draw:
             return "AB"
         if self.player_a.is_winner:
@@ -168,26 +184,3 @@ class GothelloGame():
         if self.player_b.is_winner:
             return "B"
 
-
-def random_model(input):
-    return np.random.rand(65)
-
-
-
-# async def main():
-#     # print(GothelloGame().id)
-#     gg = GothelloGame(random_model, random_model)
-#     await gg.create_players()
-#     input("Press Enter to continue...")
-#     await gg.play_game()
-#     print( gg.get_winner(), "WON!")
-
-#     # gg = await GothelloPlayer.create("ws://localhost:8080/api/v0/game/2128351955/socket", random_model)
-#     # gg2 = await GothelloGame.create("ws://localhost:8080/api/v0/game/870714488/socket")
-#     # await gg.start()
-#     # input("Press Enter to continue...")
-#     # await gg.playStone(2,0)
-#     # await asyncio.gather(gg2.start(), gg.start())
-
-# asyncio.run(main())
-# print(GothelloGame().id)
