@@ -22,7 +22,9 @@ public class Util {
   }
 
   public static void JSONMessage(WebSocketSession session, Object object) throws Exception {
-    session.sendMessage(new TextMessage(JSONStringify(object)));
+    if (session.isOpen()) {
+      session.sendMessage(new TextMessage(JSONStringify(object)));
+    }
   }
 
   public static String getMessageType(String json) throws Exception {

@@ -7,13 +7,17 @@ import gothello.gothelloserver.rules.Rules;
  */
 public class GameState extends Message {
   public final Boolean yourTurn;
+  public final Rules.Stone yourStones;
   public final Rules.Stone turn;
   public final String[][] board;
+  public final int turnNumber;
 
   public GameState(Rules.Stone player, Rules rules) {
     super("state");
     turn = rules.getTurn();
     yourTurn = (turn == player);
+    yourStones = player;
+    turnNumber = rules.getTurnNumber();
 
     // Populate board with state
     int n = rules.getBoardSize();

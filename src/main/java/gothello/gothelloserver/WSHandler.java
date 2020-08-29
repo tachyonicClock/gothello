@@ -4,6 +4,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import gothello.gothelloserver.messages.ErrorMessage;
+import gothello.gothelloserver.exceptions.GameNotFound;
 
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ public class WSHandler extends TextWebSocketHandler {
 	public static Game getGame(int id) throws Exception {
 		Game game = App.allGames.get(id);
 		if (game == null) {
-			throw new Exception("[" + id + "] Game not found");
+			throw new GameNotFound("[" + id + "] Game not found");
 		}
 		return game;
 	}
@@ -45,7 +46,11 @@ public class WSHandler extends TextWebSocketHandler {
 	@Override
 	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 		try {
-			getGame(getGameId(session)).handleWebSocketMessage(session, message);
+			Game game = getGame(getGameId(session));
+			synchronized (game) {
+				game.handleWebSocketMessage(session, message);
+			}
+		} catch (GameNotFound e) {
 		} catch (Exception e) {
 			e.printStackTrace();
 			Util.JSONMessage(session, new ErrorMessage(e.getMessage()));
@@ -58,7 +63,10 @@ public class WSHandler extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 		try {
-			getGame(getGameId(session)).handleWebSocketConnection(session);
+			Game game = getGame(getGameId(session));
+			synchronized (game) {
+				game.handleWebSocketConnection(session);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			Util.JSONMessage(session, new ErrorMessage(e.getMessage()));
@@ -71,7 +79,11 @@ public class WSHandler extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 		try {
-			getGame(getGameId(session)).handleWebSocketDisconnection(session, status);
+			Game game = getGame(getGameId(session));
+			synchronized (game) {
+				game.handleWebSocketDisconnection(session, status);
+			}
+		} catch (GameNotFound e) {
 		} catch (Exception e) {
 			e.printStackTrace();
 			log.warn("Error after connection closed, " + e.getMessage());

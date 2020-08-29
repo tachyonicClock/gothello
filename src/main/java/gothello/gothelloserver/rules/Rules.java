@@ -2,7 +2,7 @@ package gothello.gothelloserver.rules;
 
 public interface Rules {
   enum Stone {
-    BLACK, WHITE, DRAW, NONE
+    BLACK, WHITE, DRAW, SPECTATOR, NONE
   }
 
   //
@@ -14,6 +14,9 @@ public interface Rules {
 
   // getTurn returns the player who's turn it is
   Stone getTurn();
+
+  // getTurnNumber returns the number of turns that have been taken by both sides
+  int getTurnNumber();
 
   // getWinner returns the player who has won or Stone.NONE
   Stone getWinner();

@@ -43,6 +43,10 @@ public class SimpleRules implements Rules {
     return currentTurn;
   };
 
+  public int getTurnNumber(){
+    return 0;
+  }
+
   // getWinner returns the player who has won or Stone.NONE
   public Stone getWinner() {
     return winner;

@@ -9,6 +9,7 @@ public class GothelloRules implements Rules {
   private Stone currentTurn = Stone.BLACK;
   private int successivePasses = 0;
   private Stone winner = Stone.NONE;
+  private int turnNumber = 0;
   //Class to store the x,y coordinates on the grid
   private class Point{
     int x;
@@ -16,6 +17,10 @@ public class GothelloRules implements Rules {
     Point(int xCoord, int yCoord){
       x = xCoord;
       y = yCoord;
+    }
+
+    public boolean equals(Point p) {
+      return x == p.x && y == p.y;
     }
   }
   //Set up lists used by methods
@@ -56,6 +61,11 @@ public class GothelloRules implements Rules {
   public Stone getTurn() {
     return currentTurn;
   };
+
+  // getTurnNumber returns the number of turns that have been taken by both sides
+  public int getTurnNumber(){
+    return turnNumber;
+  }
 
   // getWinner returns the player who has won or Stone.NONE
   public Stone getWinner() {
@@ -105,6 +115,9 @@ public class GothelloRules implements Rules {
   // isLegal returns true or false depending on if the square is a legal move
   // for the specified player
   public boolean isLegal(int x, int y, Stone player) {
+    if (player != Stone.BLACK && player != Stone.WHITE) {
+      return false;
+    }
     //Clear the toFlip list and previous pieces
     toFlip.clear();
     previousPieces.clear();
@@ -320,16 +333,9 @@ public class GothelloRules implements Rules {
         //Check the .x and .y of each point in previousPieces to see if they match the new one 
         numDifferent = 0;
         for (int k = 0; k < previousPieces.size(); k++){
-          //Write the coordinates as strings to be compared
-          String prevPiecesTogether = String.valueOf(previousPieces.get(k).x) + String.valueOf(previousPieces.get(k).y);
-          String currentCoordTogether = String.valueOf(currentStoneCoords.x) + String.valueOf(currentStoneCoords.y);
-          //if ((previousPieces.get(k).x != currentStoneCoords.x) && (previousPieces.get(k).y != currentStoneCoords.y)){
-          if (!prevPiecesTogether.equals(currentCoordTogether)){
-            numDifferent++;
-          }
-          else{
+          if(previousPieces.isEmpty() || previousPieces.get(k).equals(currentStoneCoords)) 
             break;
-          }
+          numDifferent++;
         }
         //If none of the stones has same coords as ones in previous pieces
         if(currentStone == Stone.NONE && numDifferent == previousPieces.size()){
@@ -409,6 +415,8 @@ public class GothelloRules implements Rules {
     if (!isLegal(x, y, player)){
       return false;
     }
+
+    turnNumber ++;
     successivePasses = 0;
     board[x][y] = player;
     //For each adjacent piece

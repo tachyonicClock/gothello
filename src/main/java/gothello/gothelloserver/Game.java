@@ -1,5 +1,7 @@
 package gothello.gothelloserver;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.LoggerFactory;
@@ -10,6 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import gothello.gothelloserver.messages.*;
 import gothello.gothelloserver.rules.*;
+import gothello.gothelloserver.rules.Rules.Stone;
 
 /**
  * Game represents a game match between two players. The game class is
@@ -57,6 +60,8 @@ public class Game extends Message {
 	private WebSocketSession black = null;
 	private WebSocketSession white = null;
 
+	private Set<WebSocketSession> spectators = new HashSet<WebSocketSession>();
+
 	// isGameFull returns whether or not both players are in the game
 	private boolean isGameFull() {
 		return (black != null && white != null);
@@ -80,12 +85,16 @@ public class Game extends Message {
 		Rules.Stone player = getPlayer(session);
 		String json = message.getPayload();
 
+		// Spectators should not be able to do anything
+		if (player == Stone.SPECTATOR) {
+			return;
+		}
+
 		// Decide how to handle the message
 		switch (Util.getMessageType(json)) {
 			case "keepAlive":
 				return;
 			case "playStone":
-				log.info("[{}] {} - played a stone", id, player);
 				PlayStone playStone = Util.<PlayStone>parseMessage(json, PlayStone.class);
 				playStone.makePlay(player, rules);
 				break;
@@ -120,9 +129,9 @@ public class Game extends Message {
 				Util.JSONMessage(black, new ShowStatus(ShowStatus.Variant.SUCCESS, "White has connected"));
 
 		} else {
-			log.warn("[{}] Game is full, kicking player", id);
-			Util.JSONMessage(session, new ErrorMessage("game is full, please join another game"));
-			session.close();
+			log.warn("[{}] Spectator joined", id);
+			spectators.add(session);
+			Util.JSONMessage(session, new GameState(Rules.Stone.SPECTATOR, rules));
 			return;
 		}
 		if (isGameFull()) {
@@ -139,20 +148,18 @@ public class Game extends Message {
 		switch (player) {
 			case WHITE:
 				white = null;
-
 				// Let black know white disconnected
 				if (black != null)
 					Util.JSONMessage(black, new ShowStatus(ShowStatus.Variant.INFO, "White has lost connection"));
-
 				break;
 			case BLACK:
 				black = null;
-
 				// Let white know black disconnected
 				if (white != null)
 					Util.JSONMessage(white, new ShowStatus(ShowStatus.Variant.INFO, "Black has lost connection"));
 				break;
 			default:
+				spectators.remove(session);
 				break;
 		}
 	}
@@ -164,6 +171,10 @@ public class Game extends Message {
 		Util.JSONMessage(black, new GameState(Rules.Stone.BLACK, rules));
 		Util.JSONMessage(white, new GameState(Rules.Stone.WHITE, rules));
 
+		for (WebSocketSession session : spectators) {
+			Util.JSONMessage(session, new GameState(Rules.Stone.SPECTATOR, rules));
+		}
+
 		if (rules.isGameOver()) {
 			closeGame();
 		}
@@ -172,8 +183,6 @@ public class Game extends Message {
 	private void closeGame() throws Exception {
 		Util.JSONMessage(black, new GameOver(Rules.Stone.BLACK, rules));
 		Util.JSONMessage(white, new GameOver(Rules.Stone.WHITE, rules));
-		black.close();
-		white.close();
 		App.allGames.remove(id);
 		log.info("[{}] closing the game", id);
 	}
@@ -184,7 +193,7 @@ public class Game extends Message {
 			return Rules.Stone.BLACK;
 		if (white != null && white.getId().equals(session.getId()))
 			return Rules.Stone.WHITE;
-		return Rules.Stone.NONE;
+		return Rules.Stone.SPECTATOR;
 	}
 
 	// GameState returns the game state for usage by an HTTP endpoint
