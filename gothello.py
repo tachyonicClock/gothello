@@ -6,10 +6,9 @@ import requests
 import itertools
 import time
 
-
-
+# GOTHELLO ENDPOINT
 API_ENDPOINT = "http://localhost:8080/api/v0"
-WS_ENDPOINT  = "ws://localhost:8080/api/v0"
+WS_ENDPOINT = "ws://localhost:8080/api/v0"
 
 
 class ShouldPass(Exception):
@@ -17,48 +16,62 @@ class ShouldPass(Exception):
 
 
 class GothelloPlayer:
-    
+    '''
+    GothelloPlayer represents a single AI player and acts as a wrapper around
+    the websocket interface of the server
+
+    We convert JSON into input layers and then convert the output layer into
+    an instruction that is sent to the server
+    server --> input layer --> MODEL --> output layer --> server
+    '''
+
+    # AI constraints
     turn_limit = 100
 
-    eval_time = None
+    # Constants
+    BOARD_WIDTH = 8
+    BOARD_SIZE = 64
 
-    state = {}
-    board_width = 8
-    board_size = 64
+    # Properties
     is_game_over = False
-    verbose = False
     turn_number = 0
 
     def print_board(self, state):
+        '''output the board to terminal'''
         print("#", state["turnNumber"])
         for row in state["board"]:
             for cell in row:
                 print(cell + " ", end="")
             print()
 
-    def getXY(self, i: int):
-        return i % self.board_width, i // self.board_width
+    def getXY(self, i: int) -> tuple:
+        '''convert a 1D index into 2D '''
+        return i % self.BOARD_WIDTH, i // self.BOARD_WIDTH
 
     def output_layer_to_move(self, state, output_layer: np.ndarray):
-        output_layer = np.array(output_layer) 
         '''output_layer_to_move takes the most activated neuron and interprets it as a move'''
-        ordered_index = output_layer.argsort()
-        for i in ordered_index[::-1]:
 
+        output_layer = np.array(output_layer)
+        ordered_index = output_layer.argsort()
+
+        for i in ordered_index[::-1]:
             # The 65th neuron is reserved for passing
-            if i == self.board_size:
+            if i == self.BOARD_SIZE:
                 raise ShouldPass()
 
             x, y = self.getXY(i)
             if state["board"][y][x] == "L":
                 return x, y
+        # in the event nothing can be done the AI will pass
         raise ShouldPass()
 
     def get_input_layer(self, state) -> np.ndarray:
-        n = self.board_size * 3
+        '''Converts the board state into '''
+
+        n = self.BOARD_SIZE * 3
         offset_my_stones = 0
-        offset_opp_stones = self.board_size
-        offset_legal_moves = self.board_size * 2
+        offset_opp_stones = self.BOARD_SIZE
+        offset_legal_moves = self.BOARD_SIZE * 2
         input_layer = np.zeros([n])
         i = 0
 
@@ -102,14 +115,7 @@ class GothelloPlayer:
         try:
             if state["yourTurn"]:
                 # RUN TRAINED MODEL AS CALLBACK
-                start = time.time()
                 output_layer = self.model(self.get_input_layer(state))
-                end = time.time()
-
-                if self.eval_time == None:
-                    self.eval_time = end-start
-                else:
-                    self.eval_time = ((end-start)+self.eval_time)/2
 
                 x, y = self.output_layer_to_move(state, output_layer)
                 await self.playStone(x, y)
@@ -128,7 +134,7 @@ class GothelloPlayer:
         elif message_type == "gameOver":
             # Set variable describing who won!
             self.is_winner = msg["isWinner"]
-            self.is_draw   = (msg["winner"] == "DRAW")
+            self.is_draw = (msg["winner"] == "DRAW")
             self.is_game_over = True
             await self.websocket.close()
         else:
@@ -150,14 +156,17 @@ class GothelloPlayer:
         await self.connect_to_ws()
         return self
 
+
 class GothelloGame():
 
-    def __init__(self, model_a, model_b):
+    def __init__(self, model_a, model_b, id_a=0, id_b=0):
         r = requests.get(API_ENDPOINT + "/game/new")
         self.id = r.json()['id']
 
         self.model_a = model_a
         self.model_b = model_b
+        self.id_a = id_a
+        self.id_b = id_b
 
     def get_endpoint(self):
         return WS_ENDPOINT + "/game/" + str(self.id) + "/socket"
@@ -171,7 +180,8 @@ class GothelloGame():
         self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.model_a)
         self.player_b = await GothelloPlayer.create(self.get_endpoint(), self.model_b)
         await asyncio.gather(self.player_a.start(), self.player_b.start())
-        print("[{:10d}] Played Game, model {:2s} won, # turns {}".format(self.id, self.get_winner(), self.player_a.turn_number, self.player_a.eval_time))
+        print("[{:10d}] Match Complete A{:3d} vs B{:3d} , model {:2s} won, # turns {}".format(
+            self.id, self.id_a, self.id_b, self.get_winner(), self.player_a.turn_number))
         return self.get_winner()
 
     def get_winner(self):
@@ -183,4 +193,3 @@ class GothelloGame():
             return "A"
         if self.player_b.is_winner:
             return "B"
-
