@@ -49,7 +49,14 @@ class GothelloPlayer:
         return i % self.BOARD_WIDTH, i // self.BOARD_WIDTH
 
     def output_layer_to_move(self, state, output_layer: np.ndarray):
-        '''output_layer_to_move takes the most activated neuron and interprets it as a move'''
+        '''
+        output_layer_to_move takes the most activated neuron and interprets it 
+        as a move
+
+        65 neurons
+            64 represent where the network wants to play
+            1  represents wheather the network should pass
+        '''
 
         output_layer = np.array(output_layer)
         ordered_index = output_layer.argsort()
@@ -66,14 +73,23 @@ class GothelloPlayer:
         raise ShouldPass()
 
     def get_input_layer(self, state) -> np.ndarray:
-        '''Converts the board state into '''
+        '''
+        Converts the board state into an input layer
 
+        192 neurons representing state
+            64 represent my stones
+            64 represent the opponents stone
+            64 represent legal moves
+        '''
+
+        # Initialize the input layer with n neurons (192)
         n = self.BOARD_SIZE * 3
+        input_layer = np.zeros([n])
+
+        # Offsets for each class of input neuron
         offset_my_stones = 0
         offset_opp_stones = self.BOARD_SIZE
         offset_legal_moves = self.BOARD_SIZE * 2
-        input_layer = np.zeros([n])
-        i = 0
 
         if state["yourStones"] == "BLACK":
             my_stones = "B"
@@ -82,7 +98,7 @@ class GothelloPlayer:
             my_stones = "W"
             opp_stones = "B"
 
-        # my stones
+        i = 0
         for row in state["board"]:
             for cell in row:
                 # Is placing a stone on the cell legal
@@ -100,66 +116,84 @@ class GothelloPlayer:
         return input_layer
 
     async def playStone(self, x: int, y: int):
+        '''sends message to play a stone to the server'''
         await self.websocket.send(json.dumps({"messageType": "playStone", "row": int(y), "col": int(x)}))
 
     async def passTurn(self):
+        '''sends message to pass turn to the server'''
         await self.websocket.send(json.dumps({"messageType": "pass"}))
 
     async def play_turn(self, state):
-        self.turn_number = state["turnNumber"]
+        '''use the provided model to play a turn'''
 
+        # Skip turn if we have gone over the turn limit
+        self.turn_number = state["turnNumber"]
         if self.turn_number > self.turn_limit:
             await self.passTurn()
             return
 
-        try:
-            if state["yourTurn"]:
-                # RUN TRAINED MODEL AS CALLBACK
-                output_layer = self.model(self.get_input_layer(state))
+        # Insure it is my turn
+        if not state["yourTurn"]:
+            return
 
-                x, y = self.output_layer_to_move(state, output_layer)
-                await self.playStone(x, y)
+        try:
+            # RUN TRAINED MODEL AS CALLBACK
+            output_layer = self.model(self.get_input_layer(state))
+
+            x, y = self.output_layer_to_move(state, output_layer)
+            await self.playStone(x, y)
         except ShouldPass as err:
-            # print("Passed Turn")
             await self.passTurn()
-        # print()
 
     async def handle_message(self, msg):
+        '''handle a websocket message by first reading in the messageType'''
         message_type = msg["messageType"]
+
         if message_type == "state":
             await self.play_turn(msg)
+
         elif message_type == "status":
+            # report server error
             if msg["variant"] != "INFO" and msg["variant"] != "SUCCESS":
                 print("Server Status:", msg["variant"], msg["message"])
+
         elif message_type == "gameOver":
             # Set variable describing who won!
             self.is_winner = msg["isWinner"]
             self.is_draw = (msg["winner"] == "DRAW")
             self.is_game_over = True
             await self.websocket.close()
+
         else:
             print("Unknown Message: ", msg)
 
     async def start(self):
+        '''start playing the game'''
         while not self.is_game_over:
             message = await self.websocket.recv()
             await self.handle_message(json.loads(message))
 
-    async def connect_to_ws(self):
-        self.websocket = await websockets.connect(self.endpoint)
-
     @classmethod
     async def create(cls, endpoint, model):
+        '''create a new gothello player'''
         self = GothelloPlayer()
         self.model = model
         self.endpoint = endpoint
-        await self.connect_to_ws()
+        self.websocket = await websockets.connect(self.endpoint)
         return self
 
 
 class GothelloGame():
+    '''
+    GothelloGame is used to run a gothello game between two models 
+    '''
 
     def __init__(self, model_a, model_b, id_a=0, id_b=0):
+        '''
+        Creates a GothelloGame object that manages a game on the server
+        Requires two callback functions to be used to evaluate moves for each
+        player
+        '''
         r = requests.get(API_ENDPOINT + "/game/new")
         self.id = r.json()['id']
 
@@ -172,16 +206,23 @@ class GothelloGame():
         return WS_ENDPOINT + "/game/" + str(self.id) + "/socket"
 
     async def play_against_human(self):
+        '''Adds player_a to a game to vs a human'''
         self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.model_a)
         print("game has started!", self.id)
         await self.player_a.start()
 
-    async def play_game(self):
+    async def play_game(self, silent=False):
+        '''Begins a game between model_a and model_b'''
+
+        # Connect both players to server
         self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.model_a)
         self.player_b = await GothelloPlayer.create(self.get_endpoint(), self.model_b)
+
         await asyncio.gather(self.player_a.start(), self.player_b.start())
-        print("[{:10d}] Match Complete A{:3d} vs B{:3d} , model {:2s} won, # turns {}".format(
-            self.id, self.id_a, self.id_b, self.get_winner(), self.player_a.turn_number))
+
+        if not silent:
+            print("[{:10d}] Match Complete A{:3d} vs B{:3d} , model {:2s} won, # turns {}".format(
+                self.id, self.id_a, self.id_b, self.get_winner(), self.player_a.turn_number))
         return self.get_winner()
 
     def get_winner(self):
