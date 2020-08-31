@@ -3,10 +3,14 @@ services:
   backend:
     image: tachyonic/gothello:server-3951d59
     restart: unless-stopped
+    networks:
+      - back
 
   client:
     image: tachyonic/gothello:client-16d2e23
     restart: unless-stopped
+    networks:
+      - back
 
   bots:
     image: tachyonic/gothello:bot-5073552
@@ -18,11 +22,27 @@ services:
     environment:
       - GOTHELLO_HTTP_ENDPOINT=http://backend/api/v0
       - GOTHELLO_WS_ENDPOINT=ws://backend/api/v0
+    networks:
+      - back
 
+# SEE https://cloud.google.com/community/tutorials/nginx-reverse-proxy-docker
   nginx:
     image: nginx:stable-alpine
-    ports:
-      - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped
+    environment:
+      - VIRTUAL_PORT=80
+      - VIRTUAL_HOST=gothello.xyz
+      - LETSENCRYPT_HOST=gothello.xyz
+      - LETSENCRYPT_EMAIL=al183@students.waikato.ac.nz
+    networks:
+      - reverse-proxy
+      - back
+
+networks:
+  reverse-proxy:
+    external:
+      name: reverse-proxy
+  back:
+    driver: bridge
