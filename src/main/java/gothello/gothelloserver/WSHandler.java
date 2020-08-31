@@ -33,20 +33,11 @@ public class WSHandler extends TextWebSocketHandler {
 		}
 	}
 
-	// getGame finds the game related to an id
-	public static Game getGame(int id) throws Exception {
-		Game game = App.allGames.get(id);
-		if (game == null) {
-			throw new GameNotFound("[" + id + "] Game not found");
-		}
-		return game;
-	}
-
 	// handleTextMessage gets the correct Game and calls its handler for messages
 	@Override
 	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 		try {
-			Game game = getGame(getGameId(session));
+			Game game = MatchMaker.getGame(getGameId(session));
 			synchronized (game) {
 				game.handleWebSocketMessage(session, message);
 			}
@@ -63,7 +54,7 @@ public class WSHandler extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 		try {
-			Game game = getGame(getGameId(session));
+			Game game = MatchMaker.getGame(getGameId(session));
 			synchronized (game) {
 				game.handleWebSocketConnection(session);
 			}
@@ -79,7 +70,7 @@ public class WSHandler extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 		try {
-			Game game = getGame(getGameId(session));
+			Game game = MatchMaker.getGame(getGameId(session));
 			synchronized (game) {
 				game.handleWebSocketDisconnection(session, status);
 			}

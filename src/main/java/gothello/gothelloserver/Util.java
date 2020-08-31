@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
 /**
  * Util is a class for static utility and wrapper functions
@@ -22,8 +23,12 @@ public class Util {
   }
 
   public static void JSONMessage(WebSocketSession session, Object object) throws Exception {
-    if (session.isOpen()) {
-      session.sendMessage(new TextMessage(JSONStringify(object)));
+    if (session == null) return;
+    try {
+      if (session.isOpen() && session != null) {
+        session.sendMessage(new TextMessage(JSONStringify(object)));
+      }
+    } catch (Exception e) {
     }
   }
 

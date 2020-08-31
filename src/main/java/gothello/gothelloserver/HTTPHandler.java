@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import gothello.gothelloserver.messages.Message;
+import gothello.gothelloserver.exceptions.GameNotFound;
 import gothello.gothelloserver.messages.ErrorMessage;
 
 import org.slf4j.Logger;
@@ -28,17 +29,16 @@ public class HTTPHandler {
 	 */
 	@GetMapping("/new")
 	public Message newGame(@RequestParam(value = "type", defaultValue = "public") String gameType) {
-		Game game = new Game(Game.typeFromString(gameType));
-		App.allGames.put(game.id, game);
-
-		// Add game to open games if the game is open (public and not full)
-		if (game.getOpen()) {
-			App.openGames.add(game);
+		switch (Game.typeFromString(gameType)) {
+			case PRIVATE:
+			    return MatchMaker.newPrivateGame();
+			case PUBLIC:
+				return MatchMaker.newPublicGame();
+			case SINGLE_PLAYER:
+				return MatchMaker.newSinglePlayerGame();
+			default:
+				return new ErrorMessage("Invalid type of game");
 		}
-
-		log.info("[{}] '/game/new' create game", game.id);
-		log.info("{} games, {} open games", App.allGames.size(), App.openGames.size());
-		return game;
 	}
 
 	/**
@@ -48,39 +48,44 @@ public class HTTPHandler {
 	 */
 	@GetMapping("/join")
 	public Message joinGame() {
-		if (App.openGames.size() == 0) {
-			log.warn("'/game/join' Game not found, try making one");
+		try {
+			return MatchMaker.getOpenGame();
+		} catch (GameNotFound e) {
 			return new ErrorMessage("Game not found, try making one");
 		}
+	}
 
-		Game game = App.openGames.remove();
-		if (!game.getOpen()) {
-			return joinGame();
+	/**
+	 * This endpoint will return a game that has a player that wants to vs a bot. 
+	 * This allows a bot client to connect with someone waiting for a game. 
+	 * If it does not find a game it returns an error
+	 */
+	@GetMapping("/botqueue")
+	public Message botQueue() {
+		try {
+			return MatchMaker.getSinglePlayerGame();
+		} catch (GameNotFound e) {
+			return new ErrorMessage("No game found");
 		}
-		// Move the top game to the back of the queue and return it
-		App.openGames.add(game);
-
-		log.info("[{}] '/game/join' join game", game.id);
-		return game;
 	}
 
 	// getGame gets the game based on its id
 	@GetMapping("/{id}")
 	public Message getGame(@PathVariable("id") int id) {
-		Game game  = App.allGames.get(id);
-		if (game == null) {
+		try {
+			return MatchMaker.getGame(id);
+		} catch (GameNotFound e) {
 			return new ErrorMessage("Game not found, did you use the correct ID?");
 		}
-		return game;
 	}
 
 	// getState gets a game's state based on its id
 	@GetMapping("/{id}/state")
 	public Message getState(@PathVariable("id") int id) {
-		Game game  = App.allGames.get(id);
-		if (game == null) {
+		try {
+			return MatchMaker.getGame(id).gameState();
+		} catch (GameNotFound e) {
 			return new ErrorMessage("Game not found, did you use the correct ID?");
 		}
-		return game.gameState();
 	}
 }

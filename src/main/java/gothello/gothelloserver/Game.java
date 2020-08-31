@@ -38,7 +38,7 @@ public class Game extends Message {
 	public final GameType gameType;
 
 	enum GameType {
-		PRIVATE, PUBLIC
+		PRIVATE, PUBLIC, SINGLE_PLAYER, INVALID
 	}
 
 	// typeFromString returns the GameType given a string. Ignores capitalization
@@ -48,8 +48,10 @@ public class Game extends Message {
 				return GameType.PUBLIC;
 			case "private":
 				return GameType.PRIVATE;
+			case "single_player":
+				return GameType.SINGLE_PLAYER;
 		}
-		return GameType.PUBLIC;
+		return GameType.INVALID;
 	}
 
 	/**
@@ -63,7 +65,7 @@ public class Game extends Message {
 	private Set<WebSocketSession> spectators = new HashSet<WebSocketSession>();
 
 	// isGameFull returns whether or not both players are in the game
-	private boolean isGameFull() {
+	public boolean getGameFull() {
 		return (black != null && white != null);
 	}
 
@@ -84,6 +86,8 @@ public class Game extends Message {
 	public void handleWebSocketMessage(WebSocketSession session, TextMessage message) throws Exception {
 		Rules.Stone player = getPlayer(session);
 		String json = message.getPayload();
+
+		if (!gameInProgress) return;
 
 		// Spectators should not be able to do anything
 		if (player == Stone.SPECTATOR) {
@@ -117,24 +121,22 @@ public class Game extends Message {
 			log.info("[{}] BLACK - joined the game", id);
 
 			// Let the client know black joined the game
-			if (white != null)
-				Util.JSONMessage(white, new ShowStatus(ShowStatus.Variant.SUCCESS, "Black has connected"));
+			Util.JSONMessage(white, new ShowStatus(ShowStatus.Variant.SUCCESS, "Black has connected"));
 
 		} else if (white == null) {
 			white = session;
 			log.info("[{}] WHITE - joined the game", id);
 
 			// Let the client know white has joined the game
-			if (black != null)
-				Util.JSONMessage(black, new ShowStatus(ShowStatus.Variant.SUCCESS, "White has connected"));
-
+			Util.JSONMessage(black, new ShowStatus(ShowStatus.Variant.SUCCESS, "White has connected"));
 		} else {
 			log.warn("[{}] Spectator joined", id);
 			spectators.add(session);
 			Util.JSONMessage(session, new GameState(Rules.Stone.SPECTATOR, rules));
 			return;
 		}
-		if (isGameFull()) {
+		if (getGameFull()) {
+			MatchMaker.removeFromQueue(id);
 			log.info("[{}] Starting game", id);
 			gameInProgress = true;
 			updateClientState();
@@ -149,14 +151,12 @@ public class Game extends Message {
 			case WHITE:
 				white = null;
 				// Let black know white disconnected
-				if (black != null)
-					Util.JSONMessage(black, new ShowStatus(ShowStatus.Variant.INFO, "White has lost connection"));
+				Util.JSONMessage(black, new ShowStatus(ShowStatus.Variant.INFO, "White has lost connection"));
 				break;
 			case BLACK:
 				black = null;
 				// Let white know black disconnected
-				if (white != null)
-					Util.JSONMessage(white, new ShowStatus(ShowStatus.Variant.INFO, "Black has lost connection"));
+				Util.JSONMessage(white, new ShowStatus(ShowStatus.Variant.INFO, "Black has lost connection"));
 				break;
 			default:
 				spectators.remove(session);
@@ -180,11 +180,10 @@ public class Game extends Message {
 		}
 	}
 
-	private void closeGame() throws Exception {
+	private synchronized void closeGame() throws Exception {
 		Util.JSONMessage(black, new GameOver(Rules.Stone.BLACK, rules));
 		Util.JSONMessage(white, new GameOver(Rules.Stone.WHITE, rules));
-		App.allGames.remove(id);
-		log.info("[{}] closing the game", id);
+		MatchMaker.deleteGame(id);
 	}
 
 	// getPlayer compares the session ids to identify a message sender
