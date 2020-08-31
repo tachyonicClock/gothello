@@ -54,6 +54,8 @@ function Home(props) {
             <p>A legendary mashup of Go and Othello</p>
             <Button style={{ "margin": "5px" }} onClick={handleJoinGame} variant="outlined" color="secondary" >Join Game</Button>
             <Button style={{ "margin": "5px" }} onClick={() => { makeGame("private") }} variant="outlined" color="secondary" >Private Game</Button>
+            <Button style={{ "margin": "5px" }} onClick={() => { makeGame("single_player") }} variant="outlined" color="secondary" >Single Player</Button>
+
             <hr />
             <p>Join a private game by it's game ID</p>
             <TextField
