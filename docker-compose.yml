@@ -1,12 +1,23 @@
 version: "3.3"
 services:
   backend:
-    image: tachyonic/gothello:server-41ee5e7
+    image: tachyonic/gothello:server-3951d59
     restart: unless-stopped
 
   client:
-    image: tachyonic/gothello:client-3f4bf16
+    image: tachyonic/gothello:client-16d2e23
     restart: unless-stopped
+
+  bots:
+    image: tachyonic/gothello:bot-5073552
+    depends_on:
+      - backend
+    # requires:
+    #   - backend
+    restart: unless-stopped
+    environment:
+      - GOTHELLO_HTTP_ENDPOINT=http://backend/api/v0
+      - GOTHELLO_WS_ENDPOINT=ws://backend/api/v0
 
   nginx:
     image: nginx:stable-alpine
