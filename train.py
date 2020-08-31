@@ -8,14 +8,15 @@ import os
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 from haikunator import Haikunator
+from progress.bar import ShadyBar
 
 
 class Contendor():
     def run_model(self, input):
         return self.net.activate(input)
 
-    def save(self, file=None):
-        file="networks/" + Haikunator.haikunate(0) + ".pkl"
+    def save(self, gen, file=None):
+        file="networks/" + str(gen) +"-"+ Haikunator.haikunate(0) + ".pkl"
 
         print("SAVING NEURAL NETWORK:", file)
         with open(file, "wb") as file: 
@@ -67,7 +68,7 @@ def gothello_tournament_thread(games_list):
 
 
 def tournament(contendors):
-    sample = 200
+    sample = 100
     # threads = 4
     n = len(contendors)
 
@@ -83,8 +84,7 @@ def tournament(contendors):
     print("contendors: {}, combinations: {}, sample: {:0.2f}% {:d}".format(
         n, num_combs, sample/num_combs * 100, sample))
 
-    print("Setting Up Threads:")
-
+    bar = ShadyBar('', max=sample, suffix = '%(percent).1f%% - avg: %(avg).2fs eta: %(eta)ds')
     results = []
     for i in range(sample):
         a, b = combinations[i]
@@ -95,37 +95,8 @@ def tournament(contendors):
 
         winner = asyncio.get_event_loop().run_until_complete(gg.play_game())
         results.append(Result(winner, a.id, b.id))
-
-
-    # Initialize and run threads
-    # thread_future = []
-    # print("Running on {:d} threads with {:d} games on each".format(
-    #     threads, sample//threads))
-    # with ThreadPoolExecutor(max_workers=threads) as executor:
-    #     for thread in range(threads):
-
-    #         games_list = []
-    #         start = (sample//threads)*thread
-    #         end = sample//threads + start
-
-    #         print("Starting games {:d} to {:d}".format(start, end))
-    #         # Add range to games_list
-    #         for i in range(start, end):
-    #             a, b = combinations[i]
-    #             a = contendors[a]
-    #             b = contendors[b]
-    #             gg = gothello.GothelloGame(
-    #                 a.run_model, b.run_model, a.id, b.id)
-    #             games_list.append(gg)
-
-    #         # submit job to executor
-    #         thread_future.append(executor.submit(
-    #             gothello_tournament_thread, games_list))
-
-    # Wait for results
-    # results = []
-    # for future in thread_future:
-    #     results.extend(future.result())
+        bar.next()
+    bar.finish()
 
     scores = [0] * n
     games_played = [0] * n
@@ -136,7 +107,6 @@ def tournament(contendors):
         games_played[b] += 1
 
         winner = results[i].winner
-        print(winner)
         if winner == "A":
             scores[a] += 1
         elif winner == "B":
@@ -156,10 +126,6 @@ def tournament(contendors):
         contendors[i].genome.fitness = fitness
     print()
     print()
-
-# def eval_randoms():
-#     tournament([RandomContendor()] * 10)
-# eval_randoms()
 
 def eval_genomes(genomes, config):
     contendors = []
@@ -181,21 +147,21 @@ def run(config_file):
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
-    p.add_reporter(stats)
     p.add_reporter(neat.Checkpointer(CHECKPOINTS))
 
-    # Run for up to 300 generations.
-    winner = p.run(eval_genomes, 50)
-    Contendor(winner, config).save()
+    while True:
+        winner = p.run(eval_genomes, 5)
+        Contendor(winner, p.config).save(p.generation)
 
 def run_continue():
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
+    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-273')
 
     p.add_reporter(neat.StdOutReporter(True))
     p.add_reporter(neat.Checkpointer(CHECKPOINTS))
 
-    winner = p.run(eval_genomes, 50)
-    Contendor(winner, p.config).save()
+    while True:
+        winner = p.run(eval_genomes, 5)
+        Contendor(winner, p.config).save(p.generation)
 
 if __name__ == "__main__":
     run_continue()

@@ -26,7 +26,7 @@ class GothelloPlayer:
     '''
 
     # AI constraints
-    turn_limit = 100
+    turn_limit = 200
 
     # Constants
     BOARD_WIDTH = 8
@@ -35,6 +35,8 @@ class GothelloPlayer:
     # Properties
     is_game_over = False
     turn_number = 0
+
+    previous_network = []
 
     def print_board(self, state):
         '''output the board to terminal'''
@@ -208,10 +210,9 @@ class GothelloGame():
     async def play_against_human(self):
         '''Adds player_a to a game to vs a human'''
         self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.model_a)
-        print("game has started!", self.id)
         await self.player_a.start()
 
-    async def play_game(self, silent=False):
+    async def play_game(self):
         '''Begins a game between model_a and model_b'''
 
         # Connect both players to server
@@ -219,11 +220,11 @@ class GothelloGame():
         self.player_b = await GothelloPlayer.create(self.get_endpoint(), self.model_b)
 
         await asyncio.gather(self.player_a.start(), self.player_b.start())
-
-        if not silent:
-            print("[{:10d}] Match Complete A{:3d} vs B{:3d} , model {:2s} won, # turns {}".format(
-                self.id, self.id_a, self.id_b, self.get_winner(), self.player_a.turn_number))
         return self.get_winner()
+
+    def print_stats(self):
+        print("[{:10d}] Match Complete A{:3d} vs B{:3d} , model {:2s} won, # turns {}".format(
+            self.id, self.id_a, self.id_b, self.get_winner(), self.player_a.turn_number))
 
     def get_winner(self):
         if not self.player_a.is_game_over:
