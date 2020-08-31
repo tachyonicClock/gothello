@@ -26,7 +26,7 @@ class GothelloPlayer:
     '''
 
     # AI constraints
-    turn_limit = 200
+    turn_limit = 150
 
     # Constants
     BOARD_WIDTH = 8
@@ -37,6 +37,8 @@ class GothelloPlayer:
     turn_number = 0
 
     previous_network = []
+
+    reached_limit = False
 
     def print_board(self, state):
         '''output the board to terminal'''
@@ -132,6 +134,7 @@ class GothelloPlayer:
         self.turn_number = state["turnNumber"]
         if self.turn_number > self.turn_limit:
             await self.passTurn()
+            self.reached_limit = True 
             return
 
         # Insure it is my turn
@@ -141,6 +144,7 @@ class GothelloPlayer:
         try:
             # RUN TRAINED MODEL AS CALLBACK
             output_layer = self.model(self.get_input_layer(state))
+            await asyncio.sleep(self.delay)
 
             x, y = self.output_layer_to_move(state, output_layer)
             await self.playStone(x, y)
@@ -164,6 +168,11 @@ class GothelloPlayer:
             self.is_winner = msg["isWinner"]
             self.is_draw = (msg["winner"] == "DRAW")
             self.is_game_over = True
+
+            if self.reached_limit and self.is_winner:
+                self.is_draw = True
+                self.is_winner = False
+
             await self.websocket.close()
 
         else:
@@ -176,14 +185,17 @@ class GothelloPlayer:
             await self.handle_message(json.loads(message))
 
     @classmethod
-    async def create(cls, endpoint, model):
+    async def create(cls, endpoint, model, delay=0):
         '''create a new gothello player'''
         self = GothelloPlayer()
         self.model = model
         self.endpoint = endpoint
         self.websocket = await websockets.connect(self.endpoint)
+        self.delay = delay
         return self
 
+def get_endpoint(id):
+    return WS_ENDPOINT + "/game/" + str(id) + "/socket"
 
 class GothelloGame():
     '''
@@ -205,7 +217,7 @@ class GothelloGame():
         self.id_b = id_b
 
     def get_endpoint(self):
-        return WS_ENDPOINT + "/game/" + str(self.id) + "/socket"
+        return get_endpoint(self.id)
 
     async def play_against_human(self):
         '''Adds player_a to a game to vs a human'''
@@ -235,3 +247,4 @@ class GothelloGame():
             return "A"
         if self.player_b.is_winner:
             return "B"
+        return "AB"

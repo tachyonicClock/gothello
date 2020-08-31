@@ -42,33 +42,8 @@ class Result():
         self.id_a = id_a
         self.id_b = id_b
 
-async def play_game_with_id(id, gg):
-    # async play_game which returns an id
-    return id, await gg.play_game()
-
-async def gothello_tournament_main(games_list):
-    # Play all games in the game list and return results
-    futures = []
-    for i, gg in enumerate(games_list):
-        futures.append(await play_game_with_id(i, gg))
-    # done, _ = await asyncio.wait(futures)
-
-    # Return the results in order of the games_list
-    results = [""] * len(games_list)
-    for future in futures:
-        id, winner = future
-        results[id] = Result(winner, games_list[id].id_a, games_list[id].id_b)
-    return results
-    
-
-
-def gothello_tournament_thread(games_list):
-    loop = asyncio.new_event_loop()
-    return loop.run_until_complete(gothello_tournament_main(games_list))
-
-
 def tournament(contendors):
-    sample = 100
+    sample = 200
     # threads = 4
     n = len(contendors)
 
@@ -154,7 +129,7 @@ def run(config_file):
         Contendor(winner, p.config).save(p.generation)
 
 def run_continue():
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-273')
+    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-337')
 
     p.add_reporter(neat.StdOutReporter(True))
     p.add_reporter(neat.Checkpointer(CHECKPOINTS))

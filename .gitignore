@@ -1,4 +1,4 @@
 .vscode
 */*.pyc
 *checkpoint*
-networks/*
+*networks/*
