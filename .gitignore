@@ -1,9 +1,7 @@
-<<<<<<< HEAD
 .vscode
 */*.pyc
 *checkpoint*
 *networks/*
-=======
 .idea/
 .vscode/
 node_modules/
@@ -29,4 +27,3 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
->>>>>>> new-repo/master
