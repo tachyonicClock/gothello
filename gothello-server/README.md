@@ -35,18 +35,18 @@ http://localhost:8080/api/v0/game/new
 ##### HTTP
 
 * [`/api/v0/game/${id}`](#Game) - Get basic game meta-data
-* [`/api/v0/game/${id}/state`](#Game State) - Get the game's state including the board
-* [`/api/v0/game/new`](#New Game) - Create a new game
-* [`/api/v0/game/join`](#Join Game) - Get the id of an open game
+* [`/api/v0/game/${id}/state`](#Game-State) - Get the game's state including the board
+* [`/api/v0/game/new`](#New-Game) - Create a new game
+* [`/api/v0/game/join`](#Join-Game) - Get the id of an open game
 
 ##### Web-socket
 
 * [`state`](#State) - Informs the players of the game state including the board
-* [`gameOver`](#Game Over) - Informs the players of the winner
+* [`gameOver`](#Game-Over) - Informs the players of the winner
 * [`status`](#Status) - Informs the clients of an exception
 * [`resign`](#Resign) - Informs the server a player has resigned
 * [`pass`](#Pass) - Informs the server a player has passed
-* [`playStone`](#Play Stone) - Informs the server a player has played a stone
+* [`playStone`](#Play-Stone) - Informs the server a player has played a stone
 
 
 
