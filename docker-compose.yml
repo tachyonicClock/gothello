@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  # Run the server
+  gothello-server:
+    image: tachyonic/gothello:server-${GOTHELLO_VERSION}
+    build: ./gothello-server
+    environment:
+      - PORT=80
+    networks:
+      - backend
+
+  # Serve the react client
+  gothello-client:
+    image: tachyonic/gothello:client-${GOTHELLO_VERSION}
+    build: ./gothello-client
+    networks:
+      - backend
+
+  # Expose the whole service to the outside world
+  gateway:
+    image: nginx:stable-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 80:80
+    environment:
+      - VIRTUAL_PORT=80
+    depends_on:
+      - gothello-server
+      - gothello-client
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
