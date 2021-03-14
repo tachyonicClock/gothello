@@ -5,6 +5,7 @@ import numpy as np
 import requests
 import itertools
 import time
+from contendor import Contendor
 
 # GOTHELLO ENDPOINT
 API_ENDPOINT = "http://localhost:8080/api/v0"
@@ -26,7 +27,7 @@ class GothelloPlayer:
     '''
 
     # AI constraints
-    turn_limit = 150
+    turn_limit = 100
 
     # Constants
     BOARD_WIDTH = 8
@@ -35,9 +36,6 @@ class GothelloPlayer:
     # Properties
     is_game_over = False
     turn_number = 0
-
-    previous_network = []
-
     reached_limit = False
 
     def print_board(self, state):
@@ -127,14 +125,21 @@ class GothelloPlayer:
         '''sends message to pass turn to the server'''
         await self.websocket.send(json.dumps({"messageType": "pass"}))
 
+    async def resignGame(self):
+        '''sends message to resign'''
+        await self.websocket.send(json.dumps({"messageType": "resign"}))
+        self.is_game_over = True
+        await self.websocket.close()
+
     async def play_turn(self, state):
         '''use the provided model to play a turn'''
 
         # Skip turn if we have gone over the turn limit
         self.turn_number = state["turnNumber"]
         if self.turn_number > self.turn_limit:
-            await self.passTurn()
+            await self.resignGame()
             self.reached_limit = True 
+            self.contendor.game_expired()
             return
 
         # Insure it is my turn
@@ -143,7 +148,7 @@ class GothelloPlayer:
 
         try:
             # RUN TRAINED MODEL AS CALLBACK
-            output_layer = self.model(self.get_input_layer(state))
+            output_layer = self.contendor.run_model(self.get_input_layer(state))
             await asyncio.sleep(self.delay)
 
             x, y = self.output_layer_to_move(state, output_layer)
@@ -165,16 +170,15 @@ class GothelloPlayer:
 
         elif message_type == "gameOver":
             # Set variable describing who won!
-            self.is_winner = msg["isWinner"]
-            self.is_draw = (msg["winner"] == "DRAW")
+            if msg["isWinner"]:
+                self.contendor.won_game()
+            if msg["isLoser"]:
+                self.contendor.lost_game()
+            if msg["isDraw"]:
+                self.contendor.drew_game()
+
             self.is_game_over = True
-
-            if self.reached_limit and self.is_winner:
-                self.is_draw = True
-                self.is_winner = False
-
             await self.websocket.close()
-
         else:
             print("Unknown Message: ", msg)
 
@@ -185,10 +189,12 @@ class GothelloPlayer:
             await self.handle_message(json.loads(message))
 
     @classmethod
-    async def create(cls, endpoint, model, delay=0):
+    async def create(cls, endpoint, contendor, delay=0):
         '''create a new gothello player'''
+        assert isinstance(contendor, (Contendor)), "'contendor' should be of type Contendor"
+
         self = GothelloPlayer()
-        self.model = model
+        self.contendor = contendor
         self.endpoint = endpoint
         self.websocket = await websockets.connect(self.endpoint)
         self.delay = delay
@@ -202,17 +208,22 @@ class GothelloGame():
     GothelloGame is used to run a gothello game between two models 
     '''
 
-    def __init__(self, model_a, model_b, id_a=0, id_b=0):
+    def __init__(self, contendor_a, contendor_b, id_a=0, id_b=0):
         '''
         Creates a GothelloGame object that manages a game on the server
         Requires two callback functions to be used to evaluate moves for each
         player
         '''
+
+        assert isinstance(contendor_a, (Contendor, type(None))), "'contendor_a' should be a Contendor"
+        assert isinstance(contendor_b, (Contendor, type(None))), "'contendor_b' should be a Contendor"
+
+
         r = requests.get(API_ENDPOINT + "/game/new")
         self.id = r.json()['id']
 
-        self.model_a = model_a
-        self.model_b = model_b
+        self.contendor_a = contendor_a
+        self.contendor_b = contendor_b
         self.id_a = id_a
         self.id_b = id_b
 
@@ -221,30 +232,18 @@ class GothelloGame():
 
     async def play_against_human(self):
         '''Adds player_a to a game to vs a human'''
-        self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.model_a)
+        self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.contendor_a)
         await self.player_a.start()
 
     async def play_game(self):
-        '''Begins a game between model_a and model_b'''
+        '''Begins a game between contendor_a and contendor_b'''
 
         # Connect both players to server
-        self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.model_a)
-        self.player_b = await GothelloPlayer.create(self.get_endpoint(), self.model_b)
+        self.player_a = await GothelloPlayer.create(self.get_endpoint(), self.contendor_a)
+        self.player_b = await GothelloPlayer.create(self.get_endpoint(), self.contendor_b)
 
         await asyncio.gather(self.player_a.start(), self.player_b.start())
-        return self.get_winner()
 
     def print_stats(self):
         print("[{:10d}] Match Complete A{:3d} vs B{:3d} , model {:2s} won, # turns {}".format(
             self.id, self.id_a, self.id_b, self.get_winner(), self.player_a.turn_number))
-
-    def get_winner(self):
-        if not self.player_a.is_game_over:
-            raise Exception("Game Not Over")
-        if self.player_a.is_draw:
-            return "AB"
-        if self.player_a.is_winner:
-            return "A"
-        if self.player_b.is_winner:
-            return "B"
-        return "AB"

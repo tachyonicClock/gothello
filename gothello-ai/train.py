@@ -5,36 +5,23 @@ import asyncio
 import neat
 import pickle
 import os
+import click
+from functools import partial
+from contendor import Contendor
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
-from haikunator import Haikunator
 from progress.bar import ShadyBar
-
-
-class Contendor():
-    def run_model(self, input):
-        return self.net.activate(input)
-
-    def save(self, gen, file=None):
-        file="networks/" + str(gen) +"-"+ Haikunator.haikunate(0) + ".pkl"
-
-        print("SAVING NEURAL NETWORK:", file)
-        with open(file, "wb") as file: 
-            pickle.dump(self.net, file)
-
-    def __init__(self, genome, config, id=0):
-        self.id = id
-        self.genome = genome
-        self.net = neat.nn.FeedForwardNetwork.create(genome, config)
 
 class RandomContendor():
     class DummyGenome():
         fitness = 0
+
     def run_model(self, input):
         return np.random.rand(65)
 
     def __init__(self):
         self.genome = self.DummyGenome()
+
 
 class Result():
     def __init__(self, winner, id_a, id_b):
@@ -42,104 +29,137 @@ class Result():
         self.id_a = id_a
         self.id_b = id_b
 
-def tournament(contendors):
-    sample = 200
-    # threads = 4
-    n = len(contendors)
+class Tournament():
+    def __print_tournament_info(self, contendors, combinations, sample):
+        print()
+        print("---- CONDUCTING TOURNAMENT ----")
+        print("contendors: {}, combinations: {}, sample: {:0.2f}% {:d}"
+              .format(
+                  contendors,
+                  combinations,
+                  sample/combinations * 100,
+                  sample
+              ))
 
-    combinations = list(itertools.combinations(range(len(contendors)), 2))
-    num_combs = len(combinations)
+    def __shuffle_sample(self):
+        if self.sample_size < self.num_combs:
+            random.shuffle(self.combinations)
 
-    if sample < num_combs:
-        random.shuffle(combinations)
+    async def __play_games(self):
+        bar = ShadyBar('', max=self.sample_size,
+                       suffix='%(percent).1f%% - avg: %(avg).2fs eta: %(eta)ds')
+        tasks = []
+        # Run a random sample of the tournament games
+        for i in range(self.sample_size):
+            a, b = self.combinations[i]
+            a = self.contendors[a]
+            b = self.contendors[b]
 
-    sample = min(num_combs, sample)
-    print()
-    print("---- CONDUCTING TOURNAMENT ----")
-    print("contendors: {}, combinations: {}, sample: {:0.2f}% {:d}".format(
-        n, num_combs, sample/num_combs * 100, sample))
+            # Play a gothello game
+            gg = gothello.GothelloGame(a, b, a.id, b.id)
+            tasks.append(gg.play_game())
 
-    bar = ShadyBar('', max=sample, suffix = '%(percent).1f%% - avg: %(avg).2fs eta: %(eta)ds')
-    results = []
-    for i in range(sample):
-        a, b = combinations[i]
+        while len(tasks) != 0:
+            await tasks.pop()
+            bar.next()
 
-        a = contendors[a]
-        b = contendors[b]
-        gg = gothello.GothelloGame(a.run_model, b.run_model, a.id, b.id)
+        bar.finish()
 
-        winner = asyncio.get_event_loop().run_until_complete(gg.play_game())
-        results.append(Result(winner, a.id, b.id))
-        bar.next()
-    bar.finish()
+    def __calculate_fitness(self):
+        for i in range(self.population_size):
+            a = self.contendors[i]
+            if a.played != 0:
+                a.genome.fitness = (a.won - a.lost + 0.1 * a.expired)/a.played
+            else:
+                a.genome.fitness = 0.0
 
-    scores = [0] * n
-    games_played = [0] * n
-    for i in range(len(results)):
-        a, b = combinations[i]
+    def __print_population_summary(self):
+        print("--- Tournament complete ---")
+        for i in range(self.population_size):
+            a = self.contendors[i]
+            print("Model [{:2d}] won {:2d}, lost {:2d}, played {:2d}, expired {:2d}, fitness {:1.2f}"
+                  .format(a.id, a.won, a.lost, a.played, a.expired, a.genome.fitness))
+        print()
 
-        games_played[a] += 1
-        games_played[b] += 1
+    def run(self):
+        self.__print_tournament_info(
+            self.population_size, self.num_combs, self.sample_size)
+        asyncio.get_event_loop().run_until_complete(self.__play_games())
+        self.__calculate_fitness()
+        self.__print_population_summary()
 
-        winner = results[i].winner
-        if winner == "A":
-            scores[a] += 1
-        elif winner == "B":
-            scores[b] += 1
-        elif winner == "AB":
-            scores[a] += 0.5
-            scores[b] += 0.5
-        else:
-            raise Exception("Unexpected winner", winner)
-    # Set genome fitness
-    for i in range(n):
-        if games_played[i] != 0:
-            fitness = scores[i]/games_played[i]
-        else:
-            fitness = 0.0
-        print("Model [{:2d}] won {:2.0f} played {:2d} scored {:1.2f}".format(contendors[i].id, scores[i], games_played[i], fitness))
-        contendors[i].genome.fitness = fitness
-    print()
-    print()
+    def __init__(self, contendors, sample):
+        self.sample_size = sample
+        self.contendors = contendors
+        self.population_size = len(contendors)
+        self.combinations = list(
+            itertools.combinations(range(len(contendors)), 2))
+        self.num_combs = len(self.combinations)
 
-def eval_genomes(genomes, config):
+        self.sample_size = min(self.num_combs, self.sample_size)
+        self.__shuffle_sample()
+
+
+def eval_genomes(genomes, config, sample=100):
     contendors = []
     for genome_id, genome in genomes:
-        contendors.append(Contendor(genome, config, genome_id))
-    tournament(contendors)
+        contendors.append(Contendor.new_FFN(genome, config, genome_id))
+    Tournament(contendors, sample).run()
 
-CHECKPOINTS = 5
+def run(p, checkpoint_rate, max_sample):
+    p.add_reporter(neat.StdOutReporter(True))
+    p.add_reporter(neat.Checkpointer(checkpoint_rate))
 
-def run(config_file):
-    # Load configuration.
+    while True:
+        # partial is used to pass arguments to callback. See curryfication
+        winner = p.run(partial(eval_genomes, sample=max_sample), checkpoint_rate)
+        best = Contendor.new_FFN(winner, p.config)
+        best.save_randomname(p.generation)
+
+@click.command()
+@click.option("--neat-config", "--conf",
+              default='gothello.config',
+              help='Neat config file')
+@click.option("--checkpoint-rate", "-c",
+              type=click.INT,
+              default=5,
+              help='How many generations between checkpoints')
+@click.option("--max-sample", "-s",
+              type=click.INT,
+              default=200,
+              help='How many games are played each generation')
+def train(neat_config, checkpoint_rate, max_sample):
+    """Begin training"""
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_file)
+                         neat_config)
 
-    # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
+    run(p, checkpoint_rate, max_sample)
 
-    # Add a stdout reporter to show progress in the terminal.
-    p.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    p.add_reporter(neat.Checkpointer(CHECKPOINTS))
 
-    while True:
-        winner = p.run(eval_genomes, 5)
-        Contendor(winner, p.config).save(p.generation)
+@click.command()
+@click.option("--checkpoint-rate", "-c",
+              type=click.INT,
+              default=5,
+              help='How many generations between checkpoints')
+@click.option("--file", "-f",
+                required=True,
+              help='pkl file containing a checkpoint of a previous training session')
+@click.option("--max-sample", "-s",
+              type=click.INT,
+              default=200,
+              help='How many games are played each generation')
+def resume(checkpoint_rate, file, max_sample):
+    """Resume a previous training session using a checkpoint"""
+    p = neat.Checkpointer.restore_checkpoint(file)
+    run(p, checkpoint_rate, max_sample)
 
-def run_continue():
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-337')
-
-    p.add_reporter(neat.StdOutReporter(True))
-    p.add_reporter(neat.Checkpointer(CHECKPOINTS))
-
-    while True:
-        winner = p.run(eval_genomes, 5)
-        Contendor(winner, p.config).save(p.generation)
+@click.group()
+def cli():
+    pass
 
 if __name__ == "__main__":
-    run_continue()
-    # local_dir = os.path.dirname(__file__)
-    # config_path = os.path.join(local_dir, 'gothello.config')
-    # run(config_path)
+    cli.add_command(train)
+    cli.add_command(resume)
+    cli()

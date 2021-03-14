@@ -6,6 +6,7 @@ from progress.bar import Bar
 from contendor import Contendor
 from os import walk
 import itertools
+import click
 
 '''
 233-misty-wind.pkl             15.38%
@@ -36,30 +37,21 @@ bold-sun.pkl                   61.54%
 271-polished-rain.pkl          88.46%
 '''
 
-
-
-async def main(model_name):
-    a = Contendor(pickle.load(open("networks/" + model_name, "rb")))
-    gg = gothello.GothelloGame(a.run_model, None)
-
-    print("Game Started Against '{}' http://localhost:3000/game/{}".format(model_name, gg.id))
-    await gg.play_against_human()
-
-
 async def dual_models(name_a, name_b):
-    a = Contendor(pickle.load(open("networks/" + name_a, "rb")))
-    b = Contendor(pickle.load(open("networks/" + name_b, "rb")))
+    a = Contendor.from_net(pickle.load(open(name_a, "rb")))
+    b = Contendor.from_net(pickle.load(open(name_b, "rb")))
 
-    gg = gothello.GothelloGame(a.run_model, b.run_model)
+    gg = gothello.GothelloGame(a, b)
     win = await gg.play_game()
 
-    if win == "A":
+    if a.won == 1:
         print(name_a, "is the winner over", name_b)
-    elif win == "B":
+    elif b.won == 1:
         print(name_b, "is the winner over", name_a)
-    elif win == "AB":
+    elif a.drew == 1:
         print(name_a, name_b, "drew")
-    return win
+    elif a.expired == 1:
+        print(name_a, name_b, "reached turn limit")
 
 async def network_tournament():
     f = []
@@ -89,14 +81,29 @@ async def network_tournament():
         print("{:30} {:2.2f}%".format(name, score/num_contendors * 100))
 
 
-# asyncio.run(dual_models("320-late-water.pkl", "325-holy-glade.pkl"))
-# asyncio.run(dual_models("320-late-water.pkl", "271-polished-rain.pkl"))
-asyncio.run(dual_models("301-long-meadow.pkl", "357-wispy-sun.pkl"))
+@click.command()
+@click.option("--model-a", "-a",
+              help='pkl file containing a trained neural network')
+@click.option("--model-b", "-b",
+              help='pkl file containing a trained neural network')
+def dual(model_a, model_b):
+    """Resume a previous training session using a checkpoint"""
+    asyncio.run(dual_models(model_a, model_b))
 
+@click.command()
+@click.option("--model", "-m",
+              help='pkl file containing a trained neural network')
+def vs_human(model):
+    a = Contendor.from_net(pickle.load(open(model, "rb")))
+    gg = gothello.GothelloGame(a, None)
+    print("Game Started Against '{}' /game/{}".format(model, gg.id))
+    asyncio.run(gg.play_against_human())
 
-asyncio.run(main("357-wispy-sun.pkl"))
-# asyncio.run(network_tournament())
+@click.group()
+def cli():
+    pass
 
-
-# if __name__ == '__main__':
-#     asyncio.run(main())
+if __name__ == "__main__":
+    cli.add_command(dual)
+    cli.add_command(vs_human)
+    cli()

@@ -25,29 +25,33 @@ for (dirpath, dirnames, filenames) in walk(NETWORKS_PATH):
     break
 for name in NETWORK_NAMES:
     print("  ", name)
-    NETWORKS.append(Contendor(pickle.load(open("networks/" + name, "rb"))))
+    NETWORKS.append(Contendor.from_net(pickle.load(open("networks/" + name, "rb"))))
 
 
-async def play_game(id):
+async def handle_game(id):
     net_id = random.randint(0, len(NETWORKS)-1)
     contendor = NETWORKS[net_id]
 
-    gp = await gothello.GothelloPlayer.create(gothello.get_endpoint(id), contendor.run_model, 1)
+    gp = await gothello.GothelloPlayer.create(gothello.get_endpoint(id), contendor, 0)
     print("[{}] playing game with '{}'".format(id, NETWORK_NAMES[net_id]))
     await gp.start()
-    if gp.is_winner:
+    if contendor.played == 1 and contendor.won == 1:
         print("[{}] '{}' won the game".format(id, NETWORK_NAMES[net_id]))
     else:
         print("[{}] '{}' lost the game".format(id, NETWORK_NAMES[net_id]))
 
-async def loop(endpoint):
+async def await_player(endpoint):
+    """
+    Poll the gothello server waiting for a player to queue in the bot-queue.
+    Once a player joins the queue we start a task to handle it.
+    """
     print("Polling... ", endpoint)
     while True:
         r = requests.get(endpoint)
         r = r.json()
         if r["messageType"] == "game" and not r["gameFull"]:
-            asyncio.get_event_loop().create_task(play_game(r["id"]))
+            asyncio.get_event_loop().create_task(handle_game(r["id"]))
 
         await asyncio.sleep(1)
 
-asyncio.run(loop(gothello.API_ENDPOINT + "/game/botqueue"))
+asyncio.run(await_player(gothello.API_ENDPOINT + "/game/botqueue"))
