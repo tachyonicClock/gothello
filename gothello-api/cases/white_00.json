@@ -81,6 +81,5 @@
 {"type": "playStone", "x":0,"y":5},
 {"type": "board", "board": [["W","W","W","W","W","W","B","I"],["W","W","W","W","B","W","B","B"],["W","W","W","W","B","B","B","B"],["W","W","W","W","W","B","B","I"],["W","W","W","W","B","B","B","B"],["W","W","W","W","B","B","B","B"],["W","W","W","B","B","B","B","B"],["I","B","B","I","W","B","B","B"]]},
 {"type": "pass"},
-{"type": "pass"},
 {"type": "winner", "winner": "BLACK"}
 ]
