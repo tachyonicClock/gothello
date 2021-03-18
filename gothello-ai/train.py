@@ -48,19 +48,19 @@ class Tournament():
     async def __play_games(self):
         bar = ShadyBar('', max=self.sample_size,
                        suffix='%(percent).1f%% - avg: %(avg).2fs eta: %(eta)ds')
-        tasks = []
         # Run a random sample of the tournament games
         for i in range(self.sample_size):
             a, b = self.combinations[i]
             a = self.contendors[a]
             b = self.contendors[b]
 
+            # Reset NN between games
+            a.reset()
+            b.reset()
+
             # Play a gothello game
             gg = gothello.GothelloGame(a, b, a.id, b.id)
-            tasks.append(gg.play_game())
-
-        while len(tasks) != 0:
-            await tasks.pop()
+            await gg.play_game()
             bar.next()
 
         bar.finish()
@@ -69,7 +69,7 @@ class Tournament():
         for i in range(self.population_size):
             a = self.contendors[i]
             if a.played != 0:
-                a.genome.fitness = (a.won - a.lost + 0.1 * a.expired)/a.played
+                a.genome.fitness = (a.won - a.lost - 0.5 * a.expired)/a.played
             else:
                 a.genome.fitness = 0.0
 
@@ -103,7 +103,7 @@ class Tournament():
 def eval_genomes(genomes, config, sample=100):
     contendors = []
     for genome_id, genome in genomes:
-        contendors.append(Contendor.new_FFN(genome, config, genome_id))
+        contendors.append(Contendor.new_recurrent(genome, config, genome_id))
     Tournament(contendors, sample).run()
 
 def run(p, checkpoint_rate, max_sample):
@@ -113,7 +113,7 @@ def run(p, checkpoint_rate, max_sample):
     while True:
         # partial is used to pass arguments to callback. See curryfication
         winner = p.run(partial(eval_genomes, sample=max_sample), checkpoint_rate)
-        best = Contendor.new_FFN(winner, p.config)
+        best = Contendor.new_recurrent(winner, p.config)
         best.save_randomname(p.generation)
 
 @click.command()

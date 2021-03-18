@@ -17,7 +17,13 @@ class Contendor():
             pickle.dump(self.net, file)
 
     def save_randomname(self, gen):
-        file="networks/" + str(gen) +"-"+ Haikunator.haikunate(0) + ".pkl"
+        network_type = "unknown"
+        if isinstance(self.net, neat.nn.recurrent.RecurrentNetwork):
+            network_type = "rec"
+        if isinstance(self.net, neat.nn.FeedForwardNetwork):
+            network_type = "ffw"
+
+        file="networks/" + str(gen) +"-" + network_type + "-" + Haikunator.haikunate(0) + ".pkl"
         self.save(file)
 
     def __init__(self, id, genome, config, net):
@@ -48,6 +54,10 @@ class Contendor():
         self.played  += 1
         self.expired += 1
 
+    def reset(self):
+        if isinstance(self.net, neat.nn.recurrent.RecurrentNetwork):
+            self.net.reset()
+
     @classmethod
     def from_net(cls, net):
         return cls(0, None, None, net)
@@ -56,3 +66,8 @@ class Contendor():
     def new_FFN(cls, genome, config, id=0):
         """Create feed forward network from genome"""
         return cls(id, genome, config, neat.nn.FeedForwardNetwork.create(genome, config))
+
+    @classmethod
+    def new_recurrent(cls, genome, config, id=0):
+        """Create feed forward network from genome"""
+        return cls(id, genome, config, neat.nn.RecurrentNetwork.create(genome, config))

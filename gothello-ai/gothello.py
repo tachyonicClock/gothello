@@ -27,7 +27,7 @@ class GothelloPlayer:
     '''
 
     # AI constraints
-    turn_limit = 100
+    turn_limit = 30
 
     # Constants
     BOARD_WIDTH = 8
