@@ -109,7 +109,7 @@ Get the games current state
 This endpoint will create a new game and return its game ID. This lets a client create a game if no open game exists. If it is a public game then it can be connected to through /api/v0/games/join. If it is private the game link must be shared manually. This lets users play with who they want to by sharing a link to a private game.
 
 ```
-/api/v0/game/new?type="public/private/single-player"
+/api/v0/game/new?type="public/private/single_player"
 ```
 
 ```json
@@ -224,6 +224,8 @@ When the game is over the server informs the players who won as well as score in
         "black": 7,
         "white": 4
     },
+    "isDraw": false,
+    "isLoser": false,
     "isWinner": false
 }
 ```
@@ -251,7 +253,7 @@ Messages sent from the client/player to the server.
 When someone is willing to give up they can resign and forfeit.
 
 ```json
-{"type":"resign"}
+{"messageType":"resign"}
 ```
 
 ##### Pass
@@ -259,7 +261,7 @@ When someone is willing to give up they can resign and forfeit.
 If it is not advantageous for a player to place a stone they may pass.
 
 ```json
-{"type":"pass"}
+{"messageType":"pass"}
 ```
 
 ##### Play Stone
