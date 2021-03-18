@@ -87,17 +87,24 @@ public class Game extends Message {
 		Rules.Stone player = getPlayer(session);
 		String json = message.getPayload();
 
-		if (!gameInProgress) return;
+		if (!gameInProgress) {
+			Util.JSONMessage(session, new ShowStatus(ShowStatus.Variant.WARNING, "Game has not started yet"));
+			return;
+		}
+
+		String messageType = Util.getMessageType(json);
+
+		// Keep alive does not prompt any response from the server
+		if (message == "keepAlive") return;
 
 		// Spectators should not be able to do anything
 		if (player == Stone.SPECTATOR) {
+			Util.JSONMessage(session, new ShowStatus(ShowStatus.Variant.WARNING, "Spectators cannot do anything"));
 			return;
 		}
 
 		// Decide how to handle the message
-		switch (Util.getMessageType(json)) {
-			case "keepAlive":
-				return;
+		switch (messageType) {
 			case "playStone":
 				PlayStone playStone = Util.<PlayStone>parseMessage(json, PlayStone.class);
 				playStone.makePlay(player, rules);

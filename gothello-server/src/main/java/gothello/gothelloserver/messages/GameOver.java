@@ -10,6 +10,8 @@ public class GameOver extends Message {
   public final Rules.Stone winner;
   public final Scores scores;
   public final Boolean isWinner;
+  public final Boolean isLoser;
+  public final Boolean isDraw;
 
   public class Scores {
     public final int black;
@@ -26,5 +28,7 @@ public class GameOver extends Message {
     winner = rules.getWinner();
     scores = new Scores(rules.getScore(Rules.Stone.BLACK), rules.getScore(Rules.Stone.WHITE));
     isWinner = (winner == player);
+    isDraw = (winner == Rules.Stone.DRAW);
+    isLoser = (!isWinner && !isDraw && player != Rules.Stone.SPECTATOR);
   }
 }
