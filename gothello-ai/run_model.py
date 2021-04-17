@@ -90,14 +90,20 @@ def dual(model_a, model_b):
     """Resume a previous training session using a checkpoint"""
     asyncio.run(dual_models(model_a, model_b))
 
+async def _vs_human(model, id):
+    a = Contendor.from_net(pickle.load(open(model, "rb")))
+    player = await gothello.GothelloPlayer.create(gothello.get_endpoint(id), a)
+    print("Game Started '{}' /game/{}".format(model, id))
+    await player.start()
+
+
 @click.command()
 @click.option("--model", "-m",
               help='pkl file containing a trained neural network')
-def vs_human(model):
-    a = Contendor.from_net(pickle.load(open(model, "rb")))
-    gg = gothello.GothelloGame(a, None)
-    print("Game Started Against '{}' /game/{}".format(model, gg.id))
-    asyncio.run(gg.play_against_human())
+@click.option("--id",
+              help='pkl file containing a trained neural network')
+def vs_human(model, id):
+    asyncio.run(_vs_human(model, id))
 
 @click.group()
 def cli():
