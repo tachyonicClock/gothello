@@ -86,20 +86,19 @@ public class Game extends Message {
 	public void handleWebSocketMessage(WebSocketSession session, TextMessage message) throws Exception {
 		Rules.Stone player = getPlayer(session);
 		String json = message.getPayload();
-
-		if (!gameInProgress) {
-			Util.JSONMessage(session, new ShowStatus(ShowStatus.Variant.WARNING, "Game has not started yet"));
+		String messageType = Util.getMessageType(json);
+		
+		// Keep alive does not prompt any response from the server
+		if (messageType.equals("keepAlive")) return;
+		
+		// Spectators should not be able to do anything
+		if (player == Stone.SPECTATOR) {
+			Util.JSONMessage(session, new ShowStatus(ShowStatus.Variant.WARNING, "Spectators cannot do anything:" + messageType));
 			return;
 		}
 
-		String messageType = Util.getMessageType(json);
-
-		// Keep alive does not prompt any response from the server
-		if (message == "keepAlive") return;
-
-		// Spectators should not be able to do anything
-		if (player == Stone.SPECTATOR) {
-			Util.JSONMessage(session, new ShowStatus(ShowStatus.Variant.WARNING, "Spectators cannot do anything"));
+		if (!gameInProgress) {
+			Util.JSONMessage(session, new ShowStatus(ShowStatus.Variant.WARNING, "Game has not started yet"));
 			return;
 		}
 
@@ -175,14 +174,15 @@ public class Game extends Message {
 
 	// updateClientState sends a unique game state object to each player
 	private void updateClientState() throws Exception {
-		Util.JSONMessage(black, new GameState(Rules.Stone.BLACK, rules));
-		Util.JSONMessage(white, new GameState(Rules.Stone.WHITE, rules));
-
+		
 		for (WebSocketSession session : spectators) {
 			Util.JSONMessage(session, new GameState(Rules.Stone.SPECTATOR, rules));
 		}
-
-		if (rules.isGameOver()) {
+		
+		if (!rules.isGameOver()) {
+			Util.JSONMessage(black, new GameState(Rules.Stone.BLACK, rules));
+			Util.JSONMessage(white, new GameState(Rules.Stone.WHITE, rules));
+		}else{
 			closeGame();
 		}
 	}

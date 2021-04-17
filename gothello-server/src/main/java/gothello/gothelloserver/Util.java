@@ -37,7 +37,7 @@ public class Util {
     if (node.has("messageType")) {
       return node.get("messageType").asText();
     } else {
-      throw new Exception("All messages sent via the websocket must have a 'type'");
+      throw new Exception("All messages sent via the websocket must have a 'messageType'");
     }
   }
 
