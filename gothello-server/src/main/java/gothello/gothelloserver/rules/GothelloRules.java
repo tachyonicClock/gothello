@@ -2,79 +2,47 @@ package gothello.gothelloserver.rules;
 
 import java.util.ArrayList;
 
+import gothello.gothelloserver.exceptions.IllegalMove;
+import gothello.gothelloserver.rules.commands.PassTurn;
+import gothello.gothelloserver.rules.commands.PlayStone;
+import gothello.gothelloserver.rules.commands.Resign;
+
 /**
  * GothelloRules is an implementation of rules that implements the rules for
  * Gothello
  */
 public class GothelloRules implements Rules {
   // Internal representation of the board
-  private Stone[][] board = new Stone[8][8];
-  private Stone activePlayer = Stone.BLACK;
-  private int successivePassCount = 0;
-  private Stone winner = Stone.NONE;
-  private int turnNumber = 0;
-  private int whiteCaptures = 0;
-  private int blackCaptures = 0;
-
-  private static class Point {
-    final int x;
-    final int y;
-
-    Point(int x, int y) {
-      this.x = x;
-      this.y = y;
-    }
-
-    public boolean equals(Point p) {
-      return x == p.x && y == p.y;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj instanceof Point) {
-        return equals((Point) obj);
-      }
-      return super.equals(obj);
-    }
-
-    @Override
-    public String toString() {
-      return String.format("(%d %d)", x, y);
-    }
-
-    public Point add(Point p) {
-      return new Point(x + p.x, y + p.y);
-    }
-  }
+  public Board board = new Board();
+  public Stone activePlayer = Stone.BLACK;
+  public int successivePassCount = 0;
+  public Stone winner = Stone.NONE;
+  public int turnNumber = 0;
+  public int whiteCaptures = 0;
+  public int blackCaptures = 0;
 
   private static Point newPoint(int x, int y) {
     return new Point(x, y);
   }
 
   // the 4 main points of a compass
-  private static final Point[] cardinal = new Point[] { newPoint(0, 1), newPoint(1, 0), newPoint(0, -1),
+  public static final Point[] cardinal = new Point[] { newPoint(0, 1), newPoint(1, 0), newPoint(0, -1),
       newPoint(-1, 0) };
   // principal points are the 8 points of a compass
-  private static final Point[] principalPoints = new Point[] { newPoint(0, 1), newPoint(1, 0), newPoint(0, -1),
+  public static final Point[] principalPoints = new Point[] { newPoint(0, 1), newPoint(1, 0), newPoint(0, -1),
       newPoint(-1, 0), newPoint(1, 1), newPoint(-1, 1), newPoint(1, -1), newPoint(-1, -1) };
 
   public GothelloRules() {
     // Set board initial state
-    for (int x = 0; x < board.length; x++) {
-      for (int y = 0; y < board[x].length; y++) {
-        board[x][y] = Stone.NONE;
-      }
-    }
 
-    board[1][1] = Stone.WHITE;
-    board[2][2] = Stone.WHITE;
-    board[1][2] = Stone.BLACK;
-    board[2][1] = Stone.BLACK;
-
-    board[5][6] = Stone.WHITE;
-    board[6][5] = Stone.WHITE;
-    board[5][5] = Stone.BLACK;
-    board[6][6] = Stone.BLACK;
+    board.set(1, 1, Stone.WHITE);
+    board.set(2, 2, Stone.WHITE);
+    board.set(1, 2, Stone.BLACK);
+    board.set(2, 1, Stone.BLACK);
+    board.set(5, 6, Stone.WHITE);
+    board.set(6, 5, Stone.WHITE);
+    board.set(5, 5, Stone.BLACK);
+    board.set(6, 6, Stone.BLACK);
   }
 
   private boolean inOthelloQuad(Point p) {
@@ -82,11 +50,11 @@ public class GothelloRules implements Rules {
     return (p.x < b / 2 && p.y < b / 2) || (p.x >= b / 2 && p.y >= b / 2);
   }
 
-  private boolean inGoQuad(Point p) {
+  public boolean inGoQuad(Point p) {
     return !inOthelloQuad(p);
   }
 
-  private Stone otherPlayer(Stone player) {
+  public Stone otherPlayer(Stone player) {
     switch (player) {
       case WHITE: return Stone.BLACK;
       case BLACK: return Stone.WHITE;
@@ -104,15 +72,11 @@ public class GothelloRules implements Rules {
 
   // getSquare returns the stone at (x,y) on the board
   public Stone getSquare(int x, int y) {
-    return board[x][y];
+    return board.get(x, y);
   }
 
   private Stone getSquare(Point p) {
     return getSquare(p.x, p.y);
-  }
-
-  private void setSquare(Point p, Stone stone) {
-    board[p.x][p.y] = stone;
   }
 
   // getTurn returns the player who's turn it is
@@ -130,18 +94,6 @@ public class GothelloRules implements Rules {
     return winner;
   }
 
-  private Stone calculateWinner() {
-    int whiteScore = getScore(Stone.WHITE);
-    int blackScore = getScore(Stone.BLACK);
-    if (whiteScore > blackScore) {
-      return Stone.WHITE;
-    } else if (whiteScore < blackScore) {
-      return Stone.BLACK;
-    } else {
-      return Stone.DRAW;
-    }
-  }
-
   // getScore returns the score of the specified player
   public int getScore(Stone player) {
     int score = 0;
@@ -150,7 +102,7 @@ public class GothelloRules implements Rules {
       for (int y = 0; y < getBoardSize(); y++) {
         // If the current square on the board is the same as the player add one to the
         // score
-        if (board[x][y] == player) {
+        if (board.get(x, y) == player) {
           score++;
         }
       }
@@ -166,11 +118,10 @@ public class GothelloRules implements Rules {
 
   // getBoardSize returns the size of a square board
   public int getBoardSize() {
-    // Assuming board is square
-    return board[0].length;
+    return 8;
   }
 
-  private ArrayList<Point> getOthelloFlips(Point p, Stone player) {
+  public ArrayList<Point> getOthelloFlips(Point p, Stone player) {
     ArrayList<Point> flips = new ArrayList<>();
     for (Point dir : principalPoints) {
       if (!inBounds(p.add(dir)))
@@ -266,7 +217,7 @@ public class GothelloRules implements Rules {
   }
 
   // private int libertyCheck
-  private int libertyCount(Point p, Stone player, ArrayList<Point> searched) {
+  public int libertyCount(Point p, Stone player, ArrayList<Point> searched) {
     int liberties = 0;
     // Add the current piece to previous pieces
     searched.add(p);
@@ -306,36 +257,14 @@ public class GothelloRules implements Rules {
   // Gets the amount of open spaces around the given stone
 
   // Returns true if the x and y values are in the board, false if not
-  private boolean inBounds(int x, int y) {
+  public boolean inBounds(Point p) {
     int boardSize = getBoardSize();
-    if ((x >= 0 && x < boardSize) && (y >= 0 && y < boardSize)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private boolean inBounds(Point p) {
-    return inBounds(p.x, p.y);
+    return (p.x >= 0 && p.x < boardSize) && (p.y >= 0 && p.y < boardSize);
   }
 
   // isGameOver returns true if the game is finished
   public boolean isGameOver() {
     return (winner != Stone.NONE);
-  }
-
-  // addCaptures adds one to captures of the right colour based on piece being
-  // captured
-  private void trackCapture(Point p) {
-    // If the piece getting captured is black
-    if (getSquare(p) == Stone.BLACK) {
-      // Add one to white captures
-      whiteCaptures++;
-    }
-    //
-    else {
-      blackCaptures++;
-    }
   }
 
   //
@@ -344,82 +273,26 @@ public class GothelloRules implements Rules {
 
   // pass skips a player's turn
   public void pass(Stone player) {
-    if (activePlayer != player) {
-      return;
+    try {
+      new PassTurn(player).makeMove(this);
+    } catch (IllegalMove e) {
+      e.printStackTrace();
     }
-    successivePassCount++;
-    if (successivePassCount == 2) {
-      winner = calculateWinner();
-    }
-    nextTurn();
   }
 
   // resign forfeits the game
   public void resign(Stone player) {
-    winner = (player == Stone.BLACK) ? Stone.WHITE : Stone.BLACK;
-  }
-
-  private void nextTurn() {
-    activePlayer = (activePlayer == Stone.BLACK ? Stone.WHITE : Stone.BLACK);
-  }
-
-  private void goCaptures(Point p) {
-    Stone player = getSquare(p);
-
-    for (Point dir : cardinal) {
-      Point adj = p.add(dir);
-
-      if (!inBounds(adj) || getSquare(adj) == player)
-        continue;
-
-      // Check the liberty of the adjacent pieces as the opponent
-      ArrayList<Point> group = new ArrayList<>();
-
-      // If the adjacent piece is a gothello piece and has 0 liberties
-      if (libertyCount(adj, otherPlayer(player), group) == 0) {
-        Stone captColour = getSquare(adj);
-        // Capture group without liberties
-        for (Point stone : group) {
-          if (inGoQuad(stone) && captColour == getSquare(stone)) {
-            trackCapture(stone);
-            setSquare(stone, Stone.NONE);
-          }
-        }
-      }
-    }
+    new Resign(player).makeMove(this);
   }
 
   // playStone places a stone at (x,y)
   public boolean playStone(int x, int y, Stone player) {
-    Point p = newPoint(x, y);
 
-    if (!isLegal(x, y, player)) {
+    try {
+      new PlayStone(newPoint(x, y), player).makeMove(this);
+    } catch (IllegalMove e) {
       return false;
     }
-
-    turnNumber++;
-    successivePassCount = 0;
-
-    // Place stone
-    setSquare(p, player);
-
-    // Flip s
-    ArrayList<Point> flips = getOthelloFlips(p, player);
-    for (Point flip : flips) {
-      setSquare(flip, player);
-    }
-
-    // Apply go rules to every flipped stone
-    for (Point flip : flips) {
-      goCaptures(flip);
-    }
-
-    // Perform captures following the go rules
-    if (inGoQuad(p)) {
-      goCaptures(p);
-    }
-
-    nextTurn();
     return true;
   }
 
