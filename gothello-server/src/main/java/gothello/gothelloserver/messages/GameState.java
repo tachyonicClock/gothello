@@ -1,19 +1,20 @@
 package gothello.gothelloserver.messages;
 
 import gothello.gothelloserver.rules.Rules;
+import gothello.gothelloserver.rules.Stone;
 
 /**
  * GameState defines how the game state is serialized and sent to the players
  */
 public class GameState extends Message {
   public final Boolean yourTurn;
-  public final Rules.Stone yourStones;
-  public final Rules.Stone turn;
+  public final Stone yourStones;
+  public final Stone turn;
   public final String[][] board;
   public final int turnNumber;
   public final LastMove lastMove;
 
-  public GameState(Rules.Stone player, Rules rules) {
+  public GameState(Stone player, Rules rules) {
     super("state");
     turn = rules.getTurn();
     yourTurn = (turn == player);

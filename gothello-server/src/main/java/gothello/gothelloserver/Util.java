@@ -1,5 +1,7 @@
 package gothello.gothelloserver;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -21,22 +23,18 @@ public class Util {
     }
   }
 
-  public static void JSONMessage(WebSocketSession session, Object object) throws Exception {
-    if (session == null) return;
-    try {
-      if (session.isOpen() && session != null) {
-        session.sendMessage(new TextMessage(JSONStringify(object)));
-      }
-    } catch (Exception e) {
+  public static void JSONMessage(WebSocketSession session, Object object) throws IOException {
+    synchronized (session) {
+      session.sendMessage(new TextMessage(JSONStringify(object)));
     }
   }
 
-  public static String getMessageType(String json) throws Exception {
+  public static String getMessageType(String json) throws IOException {
     ObjectNode node = new ObjectMapper().readValue(json, ObjectNode.class);
     if (node.has("messageType")) {
       return node.get("messageType").asText();
     } else {
-      throw new Exception("All messages sent via the websocket must have a 'messageType'");
+      throw new IOException("All messages sent via the websocket must have a 'messageType'");
     }
   }
 

@@ -1,6 +1,6 @@
 package gothello.gothelloserver.rules.commands;
 
-import gothello.gothelloserver.rules.Rules.Stone;
+import gothello.gothelloserver.rules.Stone;
 import gothello.gothelloserver.rules.GothelloState;
 
 public class Resign implements GameMove {

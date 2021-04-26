@@ -1,13 +1,14 @@
 package gothello.gothelloserver.messages;
 
 import gothello.gothelloserver.rules.Rules;
+import gothello.gothelloserver.rules.Stone;
 
 /**
  * GameOver is the message sent at the end of the game signaling that the game
  * is over.
  */
 public class GameOver extends Message {
-  public final Rules.Stone winner;
+  public final Stone winner;
   public final Scores scores;
   public final Boolean isWinner;
   public final Boolean isLoser;
@@ -23,12 +24,12 @@ public class GameOver extends Message {
     }
   }
 
-  public GameOver(Rules.Stone player, Rules rules) {
+  public GameOver(Stone player, Rules rules) {
     super("gameOver");
     winner = rules.getWinner();
-    scores = new Scores(rules.getScore(Rules.Stone.BLACK), rules.getScore(Rules.Stone.WHITE));
+    scores = new Scores(rules.getScore(Stone.BLACK), rules.getScore(Stone.WHITE));
     isWinner = (winner == player);
-    isDraw = (winner == Rules.Stone.DRAW);
-    isLoser = (!isWinner && !isDraw && player != Rules.Stone.SPECTATOR);
+    isDraw = (winner == Stone.DRAW);
+    isLoser = (!isWinner && !isDraw && player != Stone.SPECTATOR);
   }
 }

@@ -4,10 +4,6 @@ import gothello.gothelloserver.exceptions.IllegalMove;
 import gothello.gothelloserver.rules.commands.GameMove;
 
 public interface Rules {
-  enum Stone {
-    BLACK, WHITE, DRAW, SPECTATOR, NONE
-  }
-
   //
   // Get Game State
   //
@@ -38,6 +34,9 @@ public interface Rules {
 
   // isGameOver returns true if the game is finished
   boolean isGameOver();
+
+  // hasGameStarted checks weather at least one move has been made
+  boolean hasGameStarted();
 
   //
   // Change Game State

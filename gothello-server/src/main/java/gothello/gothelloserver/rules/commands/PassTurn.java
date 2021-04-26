@@ -1,7 +1,7 @@
 package gothello.gothelloserver.rules.commands;
 
 import gothello.gothelloserver.exceptions.IllegalMove;
-import gothello.gothelloserver.rules.Rules.Stone;
+import gothello.gothelloserver.rules.Stone;
 import gothello.gothelloserver.rules.GothelloState;
 
 public class PassTurn implements GameMove {

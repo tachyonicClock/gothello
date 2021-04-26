@@ -29,7 +29,7 @@ public class HTTPHandler {
 	 */
 	@GetMapping("/new")
 	public Message newGame(@RequestParam(value = "type", defaultValue = "public") String gameType) {
-		switch (Game.typeFromString(gameType)) {
+		switch (Game.GameType.fromString(gameType)) {
 			case PRIVATE:
 			    return MatchMaker.newPrivateGame();
 			case PUBLIC:

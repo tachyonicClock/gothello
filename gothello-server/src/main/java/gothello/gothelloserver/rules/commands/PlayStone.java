@@ -7,7 +7,7 @@ import gothello.gothelloserver.exceptions.IllegalMove;
 import gothello.gothelloserver.rules.GothelloState;
 import gothello.gothelloserver.rules.Placement;
 import gothello.gothelloserver.rules.Point;
-import gothello.gothelloserver.rules.Rules.Stone;
+import gothello.gothelloserver.rules.Stone;
 
 public class PlayStone implements GameMove {
     public List<GameMove> changes = new ArrayList<>();

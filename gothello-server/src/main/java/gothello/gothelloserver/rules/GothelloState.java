@@ -1,7 +1,7 @@
 package gothello.gothelloserver.rules;
 
 import java.util.ArrayList;
-import gothello.gothelloserver.rules.Rules.Stone;
+import gothello.gothelloserver.rules.Stone;
 
 /**
  * GothelloRules is an implementation of rules that implements the rules for

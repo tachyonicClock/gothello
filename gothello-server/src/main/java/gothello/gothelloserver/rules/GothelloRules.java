@@ -86,6 +86,11 @@ public class GothelloRules implements Rules {
     history.push(new PlayStone(new Point(x,y), player).makeMove(game));
   }
 
+ @Override
+  public boolean hasGameStarted() {
+      return !history.isEmpty();
+  }
+
 
   @Override
   public GameMove lastMove() {

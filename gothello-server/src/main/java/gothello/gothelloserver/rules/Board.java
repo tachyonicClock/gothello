@@ -1,6 +1,6 @@
 package gothello.gothelloserver.rules;
 
-import gothello.gothelloserver.rules.Rules.Stone;
+import gothello.gothelloserver.rules.Stone;
 
 public class Board {
     private Stone[][] board = new Stone[8][8];
