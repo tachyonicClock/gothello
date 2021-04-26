@@ -1,6 +1,5 @@
 package gothello.gothelloserver.rules;
 
-import java.util.ArrayList;
 import java.util.Stack;
 
 import gothello.gothelloserver.exceptions.IllegalMove;

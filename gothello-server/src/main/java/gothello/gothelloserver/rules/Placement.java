@@ -1,7 +1,6 @@
 package gothello.gothelloserver.rules;
 
 import gothello.gothelloserver.rules.Rules.Stone;
-import gothello.gothelloserver.rules.commands.Place;
 
 public class Placement extends Point{
     public Stone stone;
