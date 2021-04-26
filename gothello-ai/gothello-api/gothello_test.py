@@ -36,7 +36,8 @@ class TestGameRunner():
 
         if instruction_type == "state":
             # If the element contains the state we check that the board matches
-            self.test.assertEqual(line["board"], player.board())
+            self.test.assertEqual(line["board"], player.board(), msg=f"\nMy Stones: {player.my_stones()}\nTurn: {player.get_turn_number()} \n{player.to_string()}")
+            
 
         if instruction_type == "playStone":
             x, y = line["x"], line["y"]
@@ -54,12 +55,15 @@ class TestGameRunner():
         self.file = file
         self.test = test
 
+        test.maxDiff = None
+
         with open(file) as json_file:
             self.data = json.load(json_file)
 
         @self.player.my_turn
         def my_turn(player):
-            return self.handle_line(player)
+            move = self.handle_line(player)
+            return move
 
         @self.player.game_over
         def my_turn(player):
@@ -113,11 +117,12 @@ class TestGothelloPlayer(unittest.IsolatedAsyncioTestCase):
         @self.black.game_over
         @self.white.game_over
         def game_over(player):
+            print("game over")
             self.decorator_test_counter += 1
 
         await self.wait_for_game_end()
         self.assertEqual(self.black.get_winner(), Stone.DRAW)
-        self.assertEqual(self.decorator_test_counter, 8, "A callback wasn't called as expected")
+        self.assertEqual(self.decorator_test_counter, 6, "A callback wasn't called as expected")
 
     async def asyncTearDown(self):
         # await self.black.resign()

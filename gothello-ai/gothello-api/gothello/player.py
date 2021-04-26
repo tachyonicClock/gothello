@@ -49,11 +49,15 @@ class GothelloMove():
     def __init__(self, message_type: str, contents={}):
         self.msg = json.dumps({"messageType": message_type, **contents})
 
+    def __str__(self):
+        return self.msg
+
 
 class WebSocketPlayer(Player):
 
     _ws = None
     _move = False
+    _game_id = -1
 
     _your_turn = False
     _your_stone = Stone.NONE
@@ -75,6 +79,7 @@ class WebSocketPlayer(Player):
     def __init__(self, endpoint: str, game_id: int):
         """Create a new gothello web-socket client and connect"""
         self._endpoint = endpoint
+        self._game_id = game_id
         self._ws_endpoint = "{}/api/v0/game/{}/socket".format(
             self._endpoint, game_id)
 
@@ -132,12 +137,23 @@ class WebSocketPlayer(Player):
                 print(cell + " ", end="")
             print()
 
+    def to_string(self):
+        str = ""
+        for row in self._board:
+            for cell in row:
+                str += cell + " "
+            str += "\n"
+        return str
+
     def board(self):
         return self._board
 
     def my_stones(self):
         """Returns my stone colour"""
         return self._your_stone
+
+    def game_id(self):
+        return self._game_id
 
     def get_square(self, x: int, y: int):
         self._check_coord(x, y)
