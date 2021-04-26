@@ -22,9 +22,6 @@ function Game(props) {
   var [volume, setVolume] = useState(1)
   var [prompt, setPrompt] = useState("Waiting for player to join")
   const [playPlaceSfx] = useSound(placeSfx, {"volume": volume});
-
-
-
   
   // This is a react hook it takes care of the websocket and their messages
   useEffect(() => {
@@ -149,6 +146,7 @@ function Game(props) {
         <div className={"VerticalCenter"}>
           <Board onClick={cellClick}
             board={(gameState? gameState.board : null)}
+            lastMove={(gameState? gameState.lastMove : null)}
             loading={loading}
             error={error}></Board>
         </div>
