@@ -1,26 +1,25 @@
 package gothello.gothelloserver.rules.commands;
 
-import gothello.gothelloserver.rules.GothelloRules;
+import gothello.gothelloserver.rules.GothelloState;
+import gothello.gothelloserver.rules.Placement;
 import gothello.gothelloserver.rules.Point;
 import gothello.gothelloserver.rules.Rules.Stone;
 
 public class Place implements GameMove {
-    Point p;
-    Stone stone;
+    public Placement placement;
 
-    public Place(Point p, Stone stone) {
-        this.p = p;
-        this.stone = stone;
+    public Place(Placement placement) {
+        this.placement = placement;
     }
 
     @Override
-    public GameMove makeMove(GothelloRules game) {
-        game.board.set(p, stone);
+    public GameMove makeMove(GothelloState game) {
+        game.board.set(placement, placement.stone);
         return this;
     }
 
     @Override
-    public void unmakeMove(GothelloRules game) {
-        game.board.set(p, Stone.NONE);
+    public void unmakeMove(GothelloState game) {
+        game.board.set(placement, Stone.NONE);
     }
 }

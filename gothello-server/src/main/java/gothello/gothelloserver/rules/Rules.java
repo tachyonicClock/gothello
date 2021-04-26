@@ -1,5 +1,8 @@
 package gothello.gothelloserver.rules;
 
+import gothello.gothelloserver.exceptions.IllegalMove;
+import gothello.gothelloserver.rules.commands.GameMove;
+
 public interface Rules {
   enum Stone {
     BLACK, WHITE, DRAW, SPECTATOR, NONE
@@ -11,6 +14,8 @@ public interface Rules {
 
   // getSquare returns the stone at (x,y) on the board
   Stone getSquare(int x, int y);
+
+  GameMove lastMove();
 
   // getTurn returns the player who's turn it is
   Stone getTurn();
@@ -39,11 +44,11 @@ public interface Rules {
   //
 
   // pass skips a player's turn
-  void pass(Stone player);
+  void pass(Stone player) throws IllegalMove;
 
   // resign forfeits the game
-  void resign(Stone player);
+  void resign(Stone player) throws IllegalMove;
 
   // playStone places a stone at (x,y)
-  boolean playStone(int x, int y, Stone player);
+  void playStone(int x, int y, Stone player) throws IllegalMove;
 }

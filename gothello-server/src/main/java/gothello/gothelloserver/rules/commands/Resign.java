@@ -1,7 +1,7 @@
 package gothello.gothelloserver.rules.commands;
 
 import gothello.gothelloserver.rules.Rules.Stone;
-import gothello.gothelloserver.rules.GothelloRules;
+import gothello.gothelloserver.rules.GothelloState;
 
 public class Resign implements GameMove {
 
@@ -12,13 +12,13 @@ public class Resign implements GameMove {
     }
 
     @Override
-    public GameMove makeMove(GothelloRules game)  {
+    public GameMove makeMove(GothelloState game)  {
         game.winner = game.otherPlayer(player);
         return this;
     }
 
     @Override
-    public void unmakeMove(GothelloRules game) {
+    public void unmakeMove(GothelloState game) {
         game.winner = Stone.NONE;
     }
 }

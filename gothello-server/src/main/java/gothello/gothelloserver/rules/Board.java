@@ -1,14 +1,9 @@
 package gothello.gothelloserver.rules;
 
-import java.util.Queue;
-import java.util.Set;
-import java.util.TreeSet;
-
 import gothello.gothelloserver.rules.Rules.Stone;
 
 public class Board {
     private Stone[][] board = new Stone[8][8];
-    // public Set<Change> boardChanges = new TreeSet<>();
 
     public Stone get(Point p){
         return get(p.x, p.y);
@@ -19,7 +14,6 @@ public class Board {
     }
     
     public void set(int x, int y, Stone stone){
-        // boardChanges.add(new Change(x, y, board[x][y], stone));
         board[x][y] = stone;
     }
 
@@ -34,18 +28,4 @@ public class Board {
             }
         }
     }
-
-    // public class Change {
-    //     final int x;
-    //     final int y;
-    //     final Stone before;
-    //     final Stone after;
-
-    //     public Change(int x, int y, Stone before, Stone after){
-    //         this.x = x;
-    //         this.y = y;
-    //         this.before = before;
-    //         this.after = after;
-    //     }
-    // }
 }

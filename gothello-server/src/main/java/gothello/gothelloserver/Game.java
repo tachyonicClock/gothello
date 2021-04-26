@@ -10,6 +10,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import gothello.gothelloserver.exceptions.IllegalMove;
 import gothello.gothelloserver.messages.*;
 import gothello.gothelloserver.rules.*;
 import gothello.gothelloserver.rules.Rules.Stone;
@@ -103,20 +104,24 @@ public class Game extends Message {
 		}
 
 		// Decide how to handle the message
-		switch (messageType) {
-			case "playStone":
-				PlayStone playStone = Util.<PlayStone>parseMessage(json, PlayStone.class);
-				playStone.makePlay(player, rules);
-				break;
-			case "pass":
-				rules.pass(player);
-				break;
-			case "resign":
-				rules.resign(player);
-			default:
-				break;
+		try {
+			switch (messageType) {
+				case "playStone":
+					PlayStone playStone = Util.<PlayStone>parseMessage(json, PlayStone.class);
+					playStone.makePlay(player, rules);
+					break;
+				case "pass":
+					rules.pass(player);
+					break;
+				case "resign":
+					rules.resign(player);
+				default:
+					break;
+			}
+			updateClientState();
+		} catch (IllegalMove e) {
+			Util.JSONMessage(session, new ShowStatus(ShowStatus.Variant.INFO, e.getMessage()));
 		}
-		updateClientState();
 	}
 
 	// handleWebSocketConnection is called when a new client connects for the

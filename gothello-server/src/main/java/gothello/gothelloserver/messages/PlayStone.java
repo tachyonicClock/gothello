@@ -16,9 +16,6 @@ public class PlayStone extends Message {
   }
 
   public void makePlay(Rules.Stone player, Rules rules) throws Exception {
-    if (!rules.playStone(row, col, player)) {
-      throw new Exception("Failed to play stone. You are trying to break the rules");
-    }
+    rules.playStone(col, row, player);
   }
-
 }

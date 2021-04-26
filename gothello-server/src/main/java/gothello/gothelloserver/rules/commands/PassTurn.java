@@ -2,7 +2,7 @@ package gothello.gothelloserver.rules.commands;
 
 import gothello.gothelloserver.exceptions.IllegalMove;
 import gothello.gothelloserver.rules.Rules.Stone;
-import gothello.gothelloserver.rules.GothelloRules;
+import gothello.gothelloserver.rules.GothelloState;
 
 public class PassTurn implements GameMove {
     Stone player;
@@ -13,7 +13,7 @@ public class PassTurn implements GameMove {
     }
 
     @Override
-    public GameMove makeMove(GothelloRules game) throws IllegalMove {
+    public GameMove makeMove(GothelloState game) throws IllegalMove {
         if (game.activePlayer != player) {
             throw new IllegalMove("You cannot pass when it is not your turn");
         }
@@ -28,13 +28,13 @@ public class PassTurn implements GameMove {
     }
 
     @Override
-    public void unmakeMove(GothelloRules game) {
+    public void unmakeMove(GothelloState game) {
         game.winner = Stone.NONE;
         game.successivePassCount --;
         nextTurn.unmakeMove(game);
     }
 
-    private Stone calculateWinner(GothelloRules game) {
+    private Stone calculateWinner(GothelloState game) {
         int whiteScore = game.getScore(Stone.WHITE);
         int blackScore = game.getScore(Stone.BLACK);
         if (whiteScore > blackScore) {

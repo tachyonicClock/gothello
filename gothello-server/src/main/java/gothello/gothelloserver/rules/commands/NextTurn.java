@@ -1,18 +1,18 @@
 package gothello.gothelloserver.rules.commands;
 
-import gothello.gothelloserver.rules.GothelloRules;
+import gothello.gothelloserver.rules.GothelloState;
 
 public class NextTurn implements GameMove {
 
     @Override
-    public GameMove makeMove(GothelloRules game) {
+    public GameMove makeMove(GothelloState game) {
         game.activePlayer = game.otherPlayer(game.activePlayer);
         game.turnNumber ++;
         return this;
     }
 
     @Override
-    public void unmakeMove(GothelloRules game) {
+    public void unmakeMove(GothelloState game) {
         game.activePlayer = game.otherPlayer(game.activePlayer);
         game.turnNumber --;
     }
