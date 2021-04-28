@@ -12,10 +12,10 @@ export function charToStone(char: string): Stone {
 }
 
 export enum StoneStyle {
-  Ghost = "ghost",
-  Highlight = "highlight",
+  Captured = "captured",
+  Flipped = "flipped",
   Normal = "normal",
-  Glow = "glow"
+  Placed = "placed"
 }
 
 
@@ -41,17 +41,11 @@ export function Cell(props: CellProps): JSX.Element {
     }
   }
 
-  // Displays the cells 'stone'
-  var stone = <></>
-  if (props.stone !== Stone.None) {
-    stone = <div className={`Stone ${props.stoneStyle} ${props.stone.toLowerCase()}`}></div>
-  }
-
   return (
     <div
       onClick={onClick}
       style={props.style}
       className={"Cell " + (props.legal? "legal" : "illegal")}>
-      {stone}
+      <div className={`Stone ${props.stoneStyle} ${props.stone.toLowerCase()}`}></div>
     </div>)
 }
