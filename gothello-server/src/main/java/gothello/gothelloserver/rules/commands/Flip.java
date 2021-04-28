@@ -4,7 +4,7 @@ import gothello.gothelloserver.rules.GothelloState;
 import gothello.gothelloserver.rules.Placement;
 import gothello.gothelloserver.rules.Point;
 
-public class Flip implements GameMove {
+public class Flip extends GameMove {
     public Placement flip;
 
     public Flip(Point p) {

@@ -24,6 +24,8 @@ public interface Rules {
 
   // getScore returns the score of the specified player
   int getScore(Stone player);
+  int getTerritory(Stone player);
+  int getCaptures(Stone player);
 
   // getBoardSize returns the size of a square board
   int getBoardSize();

@@ -26,6 +26,15 @@ class TestGothelloClient(unittest.TestCase):
 
 class TestGameRunner():
 
+    def print_board(self, board):
+        str = ""
+        for line in board:
+            for tile in line:
+                str += tile + " "
+            str += "\n"
+        return str
+        
+
     def handle_line(self, player):
         """
         Read in a 'line' or element from the json array. 
@@ -36,11 +45,14 @@ class TestGameRunner():
 
         if instruction_type == "state":
             # If the element contains the state we check that the board matches
-            self.test.assertEqual(line["board"], player.board(), msg=f"\nMy Stones: {player.my_stones()}\nTurn: {player.get_turn_number()} \n{player.to_string()}")
+            board = self.print_board(line["board"])
+            self.test.assertEqual(line["board"], player.board(), msg=f"\nMy Stones: {player.my_stones()}\nTurn: {player.get_turn_number()} \n{player.to_string()}\n{board}")
             
 
         if instruction_type == "playStone":
             x, y = line["x"], line["y"]
+            
+            # print(f"{x},{y}")
             return player.play_stone(x, y)
 
         if instruction_type == "pass":
@@ -61,8 +73,9 @@ class TestGameRunner():
             self.data = json.load(json_file)
 
         @self.player.my_turn
-        def my_turn(player):
+        def my_turn(player: WebSocketPlayer):
             move = self.handle_line(player)
+            input(f"{player.get_turn_number()} wait {move} {player.game_id()} {player.my_stones()}")
             return move
 
         @self.player.game_over

@@ -5,7 +5,7 @@ import gothello.gothelloserver.rules.Point;
 import gothello.gothelloserver.rules.Stone;
 import gothello.gothelloserver.rules.Placement;
 
-public class Capture implements GameMove {
+public class Capture extends GameMove {
     public Placement captured;
 
     public Capture(Point p) {
@@ -15,8 +15,8 @@ public class Capture implements GameMove {
     @Override
     public GameMove makeMove(GothelloState game) {
         captured.stone = game.board.get(captured);
-        trackCapture(game, 1);
         game.board.set(captured, Stone.NONE);
+        trackCapture(game, 1);
         return this;
     }
 
@@ -27,9 +27,10 @@ public class Capture implements GameMove {
     }
 
     private void trackCapture(GothelloState game, int amount){
-        if (game.board.get(captured) != Stone.BLACK) {
+        if (captured.stone == Stone.WHITE) {
             game.blackCaptures += amount;
-        } else {
+        }
+        if (captured.stone == Stone.BLACK) {
             game.whiteCaptures += amount;
         }
     }

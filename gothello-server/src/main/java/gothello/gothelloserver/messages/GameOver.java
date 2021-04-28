@@ -9,25 +9,15 @@ import gothello.gothelloserver.rules.Stone;
  */
 public class GameOver extends Message {
   public final Stone winner;
-  public final Scores scores;
+  public final Score scores;
   public final Boolean isWinner;
   public final Boolean isLoser;
   public final Boolean isDraw;
 
-  public class Scores {
-    public final int black;
-    public final int white;
-
-    Scores(int black, int white) {
-      this.black = black;
-      this.white = white;
-    }
-  }
-
   public GameOver(Stone player, Rules rules) {
     super("gameOver");
     winner = rules.getWinner();
-    scores = new Scores(rules.getScore(Stone.BLACK), rules.getScore(Stone.WHITE));
+    scores = new Score(player, rules);
     isWinner = (winner == player);
     isDraw = (winner == Stone.DRAW);
     isLoser = (!isWinner && !isDraw && player != Stone.SPECTATOR);

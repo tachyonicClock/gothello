@@ -3,7 +3,7 @@ package gothello.gothelloserver.rules.commands;
 import gothello.gothelloserver.rules.Stone;
 import gothello.gothelloserver.rules.GothelloState;
 
-public class Resign implements GameMove {
+public class Resign extends GameMove {
 
     Stone player;
 

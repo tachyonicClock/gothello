@@ -4,7 +4,7 @@ import gothello.gothelloserver.rules.GothelloState;
 import gothello.gothelloserver.rules.Placement;
 import gothello.gothelloserver.rules.Stone;
 
-public class Place implements GameMove {
+public class Place extends GameMove {
     public Placement placement;
 
     public Place(Placement placement) {

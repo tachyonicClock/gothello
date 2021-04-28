@@ -90,6 +90,8 @@ class WebSocketPlayer(Player):
         self._your_stone = Stone[msg["yourStones"]]
         self._whos_turn = Stone[msg["turn"]]
 
+        # print(msg)
+
         if self._your_turn and self._my_turn_callback:
             self._my_turn_callback()
 
@@ -98,8 +100,8 @@ class WebSocketPlayer(Player):
 
     def _handle_game_over(self, msg: dict):
         self._winner = Stone[msg["winner"]]
-        self._black_score = msg["scores"]["black"]
-        self._white_score = msg["scores"]["white"]
+        self._black_score = msg["scores"]["blackScore"]["overall"]
+        self._white_score = msg["scores"]["whiteScore"]["overall"]
         self._is_game_over = True
 
         if self._game_over_callback:

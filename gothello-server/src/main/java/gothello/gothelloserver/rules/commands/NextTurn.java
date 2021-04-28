@@ -2,7 +2,7 @@ package gothello.gothelloserver.rules.commands;
 
 import gothello.gothelloserver.rules.GothelloState;
 
-public class NextTurn implements GameMove {
+public class NextTurn extends GameMove {
 
     @Override
     public GameMove makeMove(GothelloState game) {

@@ -10,7 +10,6 @@ public class GothelloState {
   // Internal representation of the board
   public Board board = new Board();
   public Stone activePlayer = Stone.BLACK;
-  public int successivePassCount = 0;
   public Stone winner = Stone.NONE;
   public int turnNumber = 0;
   public int whiteCaptures = 0;
@@ -35,7 +34,7 @@ public class GothelloState {
     board.set(6, 6, Stone.BLACK);
   }
 
-  private boolean inOthelloQuad(Point p) {
+  public boolean inOthelloQuad(Point p) {
     int b = getBoardSize();
     return (p.x < b / 2 && p.y < b / 2) || (p.x >= b / 2 && p.y >= b / 2);
   }
@@ -50,7 +49,7 @@ public class GothelloState {
     return (p.x >= 0 && p.x < boardSize) && (p.y >= 0 && p.y < boardSize);
   }
 
-  private boolean isTurn(Stone player) {
+  public boolean isTurn(Stone player) {
     return activePlayer == player;
   }
 
@@ -70,29 +69,19 @@ public class GothelloState {
   }
 
   // getScore returns the score of the specified player
-  public int getScore(Stone player) {
+  public int getTerritory(Stone player) {
     int score = 0;
     // For each square on the board
     for (int x = 0; x < getBoardSize(); x++) {
       for (int y = 0; y < getBoardSize(); y++) {
-        // If the current square on the board is the same as the player add one to the
-        // score
-        if (board.get(x, y) == player) {
+        if (board.get(x, y) == player) 
           score++;
-        }
       }
     }
-    if (player == Stone.BLACK) {
-      return score + blackCaptures;
-    } else if (player == Stone.WHITE) {
-      return score + whiteCaptures;
-    } else {
-      return 0;
-    }
+    return score;
   }
 
   // getBoardSize returns the size of a square board
-
   public ArrayList<Point> getOthelloFlips(Point p, Stone player) {
     ArrayList<Point> flips = new ArrayList<>();
     for (Point dir : principalPoints) {
@@ -105,58 +94,6 @@ public class GothelloState {
       }
     }
     return flips;
-  }
-
-  // isLegal returns true or false depending on if the square is a legal move
-  // for the specified player
-  public boolean isLegal(int x, int y, Stone player) {
-    Point p = new Point(x, y);
-
-    // basic reasons for a move to be illegal
-    if (!inBounds(p) || !isTurn(player) || board.get(p) != Stone.NONE) {
-      return false;
-    }
-
-    // Find all the pieces to be flipped
-    ArrayList<Point> flips = getOthelloFlips(p, player);
-
-    // If point is in Othello Quadrant
-    if (inOthelloQuad(p)) {
-      // Othello moves are legal if they flip at least one piece
-      return (flips.size() != 0) ? true : false;
-    }
-
-    // If the stone would have an open space
-    if (libertyCount(p, player, new ArrayList<Point>()) != 0) {
-      return true;
-    }
-
-    // If adjacent piece has 1 liberty then the move would cause that piece to be
-    // taken and become legal
-    for (Point dir : cardinal) {
-      Point adjacent = p.add(dir);
-
-      if (!inBounds(adjacent) || board.get(adjacent) == player)
-        continue;
-
-      // If adjacent piece is in Othello Quadrant and opposing
-      if (inOthelloQuad(adjacent)) {
-        // If the piece is in the toFlip list
-        if (flips.contains(adjacent)) {
-          // Move is legal
-          return true;
-        }
-      }
-
-      // Add in the pieces to be flipped so that libertyCount acts as though they
-      // already have been flipped
-      // If adjacent piece has one liberty and is opposing and is in go quadrant
-      if (inGoQuad(adjacent) && libertyCount(adjacent, otherPlayer(player), new ArrayList<Point>(flips)) == 1) {
-        return true;
-      }
-
-    }
-    return false;
   }
 
   // Recursively search along a direction. Returns all stones that match the

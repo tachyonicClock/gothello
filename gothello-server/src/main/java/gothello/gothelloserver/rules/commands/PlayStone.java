@@ -2,6 +2,9 @@ package gothello.gothelloserver.rules.commands;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+
+import javax.security.auth.callback.LanguageCallback;
 
 import gothello.gothelloserver.exceptions.IllegalMove;
 import gothello.gothelloserver.rules.GothelloState;
@@ -9,8 +12,8 @@ import gothello.gothelloserver.rules.Placement;
 import gothello.gothelloserver.rules.Point;
 import gothello.gothelloserver.rules.Stone;
 
-public class PlayStone implements GameMove {
-    public List<GameMove> changes = new ArrayList<>();
+public class PlayStone extends GameMove {
+    public Stack<GameMove> changes = new Stack<>();
 
     Placement placement;
     int previousPassCount = 0;
@@ -19,42 +22,60 @@ public class PlayStone implements GameMove {
         this.placement = new Placement(p, player);
     }
 
-    @Override
-    public GameMove makeMove(GothelloState game) throws IllegalMove {
-        if (game.isLegal(placement.x, placement.y, placement.stone))
-            new IllegalMove("The stone placement is illegal");
+    private GameMove internalMakeMove(GothelloState game) throws IllegalMove {
+        if (!game.inBounds(placement))
+            throw new IllegalMove("Can't play a stone out of the game board");
 
-        previousPassCount = game.successivePassCount;
-        game.successivePassCount = 0;
+        if (!game.isTurn(placement.stone))
+            throw new IllegalMove("It must be your turn to play a stone");
 
-        changes.add(new Place(placement).makeMove(game));
+        changes.push(new Place(placement).makeMove(game));
 
         // Flip each stone that has been flipped
         ArrayList<Point> flips = game.getOthelloFlips(placement, placement.stone);
         for (Point flip : flips) {
-            changes.add(new Flip(flip).makeMove(game));
+            changes.push(new Flip(flip).makeMove(game));
         }
+
+        if (game.inOthelloQuad(placement) && flips.size() == 0)
+            throw new IllegalMove("Stones played in the othello quadrant must flip at least one stone");
 
         // Apply go rules to every flipped stone
         for (Point flip : flips) {
             goCaptures(game, flip);
         }
-
+        
         // Perform captures following the go rules
         if (game.inGoQuad(placement)) {
             goCaptures(game, placement);
         }
 
-        changes.add(new NextTurn().makeMove(game));
+        if (game.inGoQuad(placement) && game.libertyCount(placement, placement.stone, new ArrayList<>()) == 0)
+            throw new IllegalMove("Can't place a stone so that its group is surrounded");
+
+        // if (game.inGoQuad(placement) && libertyCount() )
+            // throw new IllegalMove("Can't place stone since the group would be captured");
+
+        changes.push(new NextTurn().makeMove(game));
         return this;
     }
 
     @Override
-    public void unmakeMove(GothelloState game) {
-        for (int i = changes.size(); i < 0; i--) {
-            changes.get(i).unmakeMove(game);
+    public GameMove makeMove(GothelloState game) throws IllegalMove {
+        try {
+            return internalMakeMove(game);
+        } catch (IllegalMove e) {
+            unmakeMove(game);
+            throw e;
         }
-        game.successivePassCount = previousPassCount;
+
+    }
+
+    @Override
+    public void unmakeMove(GothelloState game) {
+        while (!changes.empty()) {
+            changes.pop().unmakeMove(game);
+        }
     }
 
     private void goCaptures(GothelloState game, Point p) {
@@ -62,20 +83,20 @@ public class PlayStone implements GameMove {
 
         for (Point dir : GothelloState.cardinal) {
             Point adj = p.add(dir);
-
-            if (!game.inBounds(adj) || game.board.get(adj) == player)
+            Stone oppPlayer = game.otherPlayer(player) ;
+            
+            if (!game.inBounds(adj) || game.board.get(adj) != oppPlayer)
                 continue;
 
             // Check the liberty of the adjacent pieces as the opponent
             ArrayList<Point> group = new ArrayList<>();
 
             // If the adjacent piece is a gothello piece and has 0 liberties
-            if (game.libertyCount(adj, game.otherPlayer(player), group) == 0) {
-                Stone captColour = game.board.get(adj);
+            if (game.libertyCount(adj, oppPlayer, group) == 0) {
                 // Capture group without liberties
                 for (Point stone : group) {
-                    if (game.inGoQuad(stone) && captColour == game.board.get(stone)) {
-                        changes.add(new Capture(stone).makeMove(game));
+                    if (game.inGoQuad(stone) && oppPlayer == game.board.get(stone)) {
+                        changes.push(new Capture(stone).makeMove(game));
                     }
                 }
             }

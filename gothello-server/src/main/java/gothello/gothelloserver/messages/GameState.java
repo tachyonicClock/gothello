@@ -13,6 +13,7 @@ public class GameState extends Message {
   public final String[][] board;
   public final int turnNumber;
   public final LastMove lastMove;
+  public final Score score;
 
   public GameState(Stone player, Rules rules) {
     super("state");
@@ -21,6 +22,7 @@ public class GameState extends Message {
     yourStones = player;
     turnNumber = rules.getTurnNumber();
     lastMove = new LastMove(rules.lastMove());
+    score = new Score(player, rules);
 
     // Populate board with state
     int n = rules.getBoardSize();
