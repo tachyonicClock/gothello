@@ -1,7 +1,6 @@
 package gothello.gothelloserver.rules;
 
 import java.util.ArrayList;
-import gothello.gothelloserver.rules.Stone;
 
 /**
  * GothelloRules is an implementation of rules that implements the rules for
@@ -28,10 +27,10 @@ public class GothelloState {
     // Set board initial state
     board.set(1, 1, Stone.WHITE);
     board.set(2, 2, Stone.WHITE);
-    board.set(1, 2, Stone.BLACK);
     board.set(2, 1, Stone.BLACK);
-    board.set(5, 6, Stone.WHITE);
+    board.set(1, 2, Stone.BLACK);
     board.set(6, 5, Stone.WHITE);
+    board.set(5, 6, Stone.WHITE);
     board.set(5, 5, Stone.BLACK);
     board.set(6, 6, Stone.BLACK);
   }

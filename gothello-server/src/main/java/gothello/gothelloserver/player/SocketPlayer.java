@@ -1,10 +1,7 @@
-package gothello.gothelloserver.game;
-
-import java.io.IOException;
+package gothello.gothelloserver.player;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -22,7 +19,7 @@ import gothello.gothelloserver.rules.Stone;
 public class SocketPlayer extends GameObserver {
     private final Logger log = LoggerFactory.getLogger(SocketPlayer.class);
     private final WebSocketSession session;
-    private Stone player;
+    private Stone player = Stone.NONE;
 
     public void sendMessage(Message message) {
         synchronized(session){
@@ -90,13 +87,13 @@ public class SocketPlayer extends GameObserver {
     public SocketPlayer(Game game, WebSocketSession session) {
         this.session = session;
         this.game = game;
-        game.attach(this);
         this.player = game.joinGame();
+        game.attach(this);
     }
 
     @Override
     public String toString() {
-        return String.format("SocketPlayer");
+        return String.format("SocketPlayer %s", this.player.toString());
     }
 
 }

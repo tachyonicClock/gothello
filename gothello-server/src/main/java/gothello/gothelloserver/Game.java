@@ -5,13 +5,12 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties.Retry;
 import org.springframework.util.StringUtils;
 
-import gothello.gothelloserver.game.GameObserver;
 import gothello.gothelloserver.messages.GameState;
 import gothello.gothelloserver.messages.Message;
 import gothello.gothelloserver.messages.ShowStatus;
+import gothello.gothelloserver.player.GameObserver;
 import gothello.gothelloserver.rules.GothelloRules;
 import gothello.gothelloserver.rules.Rules;
 import gothello.gothelloserver.rules.Stone;
@@ -25,6 +24,7 @@ public class Game extends Message {
 
 	enum GameType {
 		PRIVATE, PUBLIC, SINGLE_PLAYER, INVALID;
+
 		public static GameType fromString(String gameType) {
 			switch (gameType.toLowerCase()) {
 			case "public":
@@ -58,7 +58,6 @@ public class Game extends Message {
 
 	private boolean gameStarted = false;
 
-
 	// getOpen returns whether or not someone can join the game
 	public boolean getOpen() {
 		if (rules.isGameOver())
@@ -72,16 +71,17 @@ public class Game extends Message {
 
 		if (player == Stone.BLACK) {
 			blackInGame = false;
-		}else if (player == Stone.WHITE) {
+		} else if (player == Stone.WHITE) {
 			whiteInGame = false;
 		}
-
 	}
 
-	private void start(){
+	private void start() {
+		log.info("[{}] game {}", id, gameStarted ? "restarted" : "started");
+		if (!gameStarted) {
+			notifyAllObservers();
+		}
 		gameStarted = true;
-		notifyAllObservers();
-		log.info("[{}] Starting", id);
 	}
 
 	public Stone joinGame() {
@@ -95,7 +95,8 @@ public class Game extends Message {
 		}
 
 		messageAllObservers(new ShowStatus(ShowStatus.Variant.SUCCESS,
-		StringUtils.capitalize(String.format("%s has joined", player.toString()))));
+				StringUtils.capitalize(String.format("%s has joined", player.toString()))));
+		log.info("[{}] {} joined", id, player.toString());
 
 		if (getGameFull()) {
 			MatchMaker.removeFromQueue(id);
@@ -108,6 +109,9 @@ public class Game extends Message {
 		log.info("[{}] {} - Joined", id, observer.toString());
 		observers.add(observer);
 
+		if (gameStarted) {
+			observer.update();
+		}
 	}
 
 	public void detach(GameObserver observer) {
@@ -131,7 +135,7 @@ public class Game extends Message {
 		}
 	}
 
-	public GameState gameState(){
+	public GameState gameState() {
 		return new GameState(Stone.SPECTATOR, rules);
 	}
 

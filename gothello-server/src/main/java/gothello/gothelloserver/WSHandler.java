@@ -4,8 +4,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import gothello.gothelloserver.messages.ErrorMessage;
+import gothello.gothelloserver.player.SocketPlayer;
 import gothello.gothelloserver.exceptions.GameNotFound;
-import gothello.gothelloserver.game.SocketPlayer;
 
 import org.slf4j.LoggerFactory;
 

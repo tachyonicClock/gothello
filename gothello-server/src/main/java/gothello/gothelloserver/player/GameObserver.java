@@ -1,4 +1,4 @@
-package gothello.gothelloserver.game;
+package gothello.gothelloserver.player;
 
 import gothello.gothelloserver.Game;
 import gothello.gothelloserver.messages.Message;
