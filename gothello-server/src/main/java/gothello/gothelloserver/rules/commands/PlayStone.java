@@ -64,12 +64,12 @@ public class PlayStone extends GameCommand {
             throw e;
         }
 
-        if (game.previousStates.contains(game.board.hashCode())){
+        if (game.previousStates.contains(game.board.zKey())){
             internalUnmakeMove(game);
             throw new IllegalMove("Breaks the ko-rule");
         }
 
-        game.previousStates.add(game.board.hashCode());
+        game.previousStates.add(game.board.zKey());
         return this;
     }
 
@@ -81,7 +81,7 @@ public class PlayStone extends GameCommand {
     
     @Override
     public void unmakeMove(GothelloState game) {
-        game.previousStates.remove(game.board.hashCode());
+        game.previousStates.remove(game.board.zKey());
         internalUnmakeMove(game);
     }
 

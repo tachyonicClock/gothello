@@ -1,8 +1,9 @@
 package gothello.gothelloserver.rules;
 
 public class Board {
-    public final int width = 8;
-    public final int height = 8;
+    public final static ZobristHash zHash = ZobristHash.getInstance();
+    public final static int width = 8;
+    public final static int height = 8;
 
     private Stone[][] board = new Stone[width][height];
 
@@ -67,9 +68,8 @@ public class Board {
         set(6, 6, Stone.BLACK);
     }
 
-    @Override
-    public int hashCode() {
-        return java.util.Arrays.deepHashCode(board);
+    public long zKey() {
+        return zHash.hash(this);
     }
 
     public Board() {

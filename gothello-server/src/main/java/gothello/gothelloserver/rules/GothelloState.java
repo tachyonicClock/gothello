@@ -24,7 +24,7 @@ public class GothelloState {
 
   // Previous states is a set of previous states. This is used to implement the
   // ko-rule
-  public TreeSet<Integer> previousStates = new TreeSet<>();
+  public TreeSet<Long> previousStates = new TreeSet<>();
 
   public void makeMove(GameCommand move) throws IllegalMove {
     history.push(move.makeMove(this));
