@@ -3,7 +3,7 @@ package gothello.gothelloserver.rules.commands;
 import gothello.gothelloserver.rules.Stone;
 import gothello.gothelloserver.rules.GothelloState;
 
-public class Resign extends GameMove {
+public class Resign extends GameCommand {
 
     Stone player;
 
@@ -12,8 +12,8 @@ public class Resign extends GameMove {
     }
 
     @Override
-    public GameMove makeMove(GothelloState game)  {
-        game.winner = game.otherPlayer(player);
+    public GameCommand makeMove(GothelloState game)  {
+        game.winner = Stone.otherPlayer(player);
         return this;
     }
 

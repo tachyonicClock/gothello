@@ -4,7 +4,7 @@ import gothello.gothelloserver.rules.GothelloState;
 import gothello.gothelloserver.rules.Placement;
 import gothello.gothelloserver.rules.Stone;
 
-public class Place extends GameMove {
+public class Place extends GameCommand {
     public Placement placement;
 
     public Place(Placement placement) {
@@ -12,7 +12,7 @@ public class Place extends GameMove {
     }
 
     @Override
-    public GameMove makeMove(GothelloState game) {
+    public GameCommand makeMove(GothelloState game) {
         game.board.set(placement, placement.stone);
         return this;
     }

@@ -4,32 +4,33 @@ import gothello.gothelloserver.exceptions.IllegalMove;
 import gothello.gothelloserver.rules.Stone;
 import gothello.gothelloserver.rules.GothelloState;
 
-public class PassTurn extends GameMove {
+public class PassTurn extends GameCommand {
     Stone player;
-    NextTurn nextTurn = new NextTurn();
+    GameCommand subMove;
+
 
     public PassTurn(Stone player) {
         this.player = player;
     }
 
     @Override
-    public GameMove makeMove(GothelloState game) throws IllegalMove {
+    public GameCommand makeMove(GothelloState game) throws IllegalMove {
         if (game.activePlayer != player) {
             throw new IllegalMove("You cannot pass when it is not your turn");
         }
 
-        nextTurn.makeMove(game);
+        if (!game.history.isEmpty() && game.history.peek() instanceof PassTurn ){
+            subMove = new EndGame().makeMove(game);
+        }else {
+            subMove = new NextTurn().makeMove(game);
+        }
+
         return this;
     }
 
     @Override
     public void unmakeMove(GothelloState game) {
         game.winner = Stone.NONE;
-        nextTurn.unmakeMove(game);
-    }
-
-    @Override
-    public boolean isPass() {
-        return true;
+        subMove.unmakeMove(game);
     }
 }

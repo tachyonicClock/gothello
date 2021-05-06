@@ -1,7 +1,7 @@
 package gothello.gothelloserver.rules;
 
 import gothello.gothelloserver.exceptions.IllegalMove;
-import gothello.gothelloserver.rules.commands.GameMove;
+import gothello.gothelloserver.rules.commands.GameCommand;
 
 public interface Rules {
   //
@@ -11,7 +11,7 @@ public interface Rules {
   // getSquare returns the stone at (x,y) on the board
   Stone getSquare(int x, int y);
 
-  GameMove lastMove();
+  GameCommand lastMove();
 
   // getTurn returns the player who's turn it is
   Stone getTurn();

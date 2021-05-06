@@ -5,7 +5,7 @@ import java.util.List;
 
 import gothello.gothelloserver.rules.commands.Capture;
 import gothello.gothelloserver.rules.commands.Flip;
-import gothello.gothelloserver.rules.commands.GameMove;
+import gothello.gothelloserver.rules.commands.GameCommand;
 import gothello.gothelloserver.rules.commands.PassTurn;
 import gothello.gothelloserver.rules.commands.Place;
 import gothello.gothelloserver.rules.Placement;
@@ -30,7 +30,7 @@ public class LastMove {
     }
 
     private void add(PlayStone playStone) {
-        for (GameMove move : playStone.changes) {
+        for (GameCommand move : playStone.changes) {
             if (move instanceof Capture) {
                 add((Capture) move);
             }
@@ -48,7 +48,7 @@ public class LastMove {
         pass = true;
     }
 
-    LastMove(GameMove move) {
+    LastMove(GameCommand move) {
         if (move instanceof PlayStone) {
             add((PlayStone) move);
         } else if (move instanceof PassTurn){

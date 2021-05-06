@@ -1,9 +1,7 @@
 package gothello.gothelloserver.rules;
 
-import java.util.Stack;
-
 import gothello.gothelloserver.exceptions.IllegalMove;
-import gothello.gothelloserver.rules.commands.GameMove;
+import gothello.gothelloserver.rules.commands.GameCommand;
 import gothello.gothelloserver.rules.commands.PassTurn;
 import gothello.gothelloserver.rules.commands.PlayStone;
 import gothello.gothelloserver.rules.commands.Resign;
@@ -15,7 +13,6 @@ import gothello.gothelloserver.rules.commands.Resign;
 public class GothelloRules implements Rules {
 
   private GothelloState game = new GothelloState();
-  private Stack<GameMove> history = new Stack<>();
 
   public GothelloRules() {
   }
@@ -42,21 +39,17 @@ public class GothelloRules implements Rules {
 
   @Override
   public int getScore(Stone player) {
-    return getTerritory(player) + getCaptures(player);
+    return game.getScore(player);
   }
 
   @Override
   public int getTerritory(Stone player) {
-    return game.getTerritory(player);
+    return game.board.countStones(player);
   }
 
   @Override
   public int getCaptures(Stone player) {
-    if (player == Stone.BLACK)
-      return game.blackCaptures;
-    if (player == Stone.WHITE)
-      return game.whiteCaptures;
-    return 0;
+    return game.getCaptures(player);
   }
 
   @Override
@@ -79,43 +72,32 @@ public class GothelloRules implements Rules {
     return game.winner != Stone.NONE;
   }
 
-  private Stone getLeader(int blackScore, int whiteScore){
-    if (blackScore == whiteScore)
-      return Stone.DRAW;
-    return blackScore > whiteScore? Stone.BLACK : Stone.WHITE;
-  }
-
   @Override
   public void pass(Stone player) throws IllegalMove {
-    // Two consecutive passes end the game
-    history.push(new PassTurn(player).makeMove(game));
-    int size = history.size();
-    if (size >= 2 && history.get(size - 1).isPass() && history.get(size - 2).isPass()) {
-      game.winner = getLeader(getScore(Stone.BLACK), getScore(Stone.WHITE));
-    }
+    game.makeMove(new PassTurn(player));
   }
 
   @Override
-  public void resign(Stone player) {
-    history.push(new Resign(player).makeMove(game));
+  public void resign(Stone player) throws IllegalMove {
+    game.makeMove(new Resign(player));
   }
 
   @Override
   public void playStone(int x, int y, Stone player) throws IllegalMove {
-    history.push(new PlayStone(new Point(x, y), player).makeMove(game));
+    game.makeMove(new PlayStone(new Point(x, y), player));
   }
 
   @Override
   public boolean hasGameStarted() {
-    return !history.isEmpty();
+    return !game.history.isEmpty();
   }
 
   @Override
-  public GameMove lastMove() {
-    if (history.isEmpty()) {
+  public GameCommand lastMove() {
+    if (game.history.isEmpty()) {
       return null;
     }
-    return history.peek();
+    return game.history.peek();
   }
 
 }

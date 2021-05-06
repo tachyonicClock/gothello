@@ -88,9 +88,6 @@ export default class Board extends React.Component<BoardProps, {}> {
       }
     }
 
-    // Apply style to show last captures
-    console.log(lastMove.flips)
-
     lastMove.flips.forEach( (flip: any) => {
       var i = this.xyToIndex(flip.x, flip.y)
       stoneStyle[i] = StoneStyle.Flipped

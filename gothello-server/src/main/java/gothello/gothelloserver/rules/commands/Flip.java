@@ -3,8 +3,9 @@ package gothello.gothelloserver.rules.commands;
 import gothello.gothelloserver.rules.GothelloState;
 import gothello.gothelloserver.rules.Placement;
 import gothello.gothelloserver.rules.Point;
+import gothello.gothelloserver.rules.Stone;
 
-public class Flip extends GameMove {
+public class Flip extends GameCommand {
     public Placement flip;
 
     public Flip(Point p) {
@@ -12,9 +13,9 @@ public class Flip extends GameMove {
     }
 
     @Override
-    public GameMove makeMove(GothelloState game) {
+    public GameCommand makeMove(GothelloState game) {
         flip.stone = game.board.get(flip);
-        game.board.set(flip, game.otherPlayer(flip.stone));
+        game.board.set(flip, Stone.otherPlayer(flip.stone));
         return this;
     }
 

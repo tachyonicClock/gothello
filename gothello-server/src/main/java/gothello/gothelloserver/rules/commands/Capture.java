@@ -5,7 +5,7 @@ import gothello.gothelloserver.rules.Point;
 import gothello.gothelloserver.rules.Stone;
 import gothello.gothelloserver.rules.Placement;
 
-public class Capture extends GameMove {
+public class Capture extends GameCommand {
     public Placement captured;
 
     public Capture(Point p) {
@@ -13,7 +13,7 @@ public class Capture extends GameMove {
     }
 
     @Override
-    public GameMove makeMove(GothelloState game) {
+    public GameCommand makeMove(GothelloState game) {
         captured.stone = game.board.get(captured);
         game.board.set(captured, Stone.NONE);
         trackCapture(game, 1);

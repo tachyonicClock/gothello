@@ -56,9 +56,9 @@ function Game(props) {
 
         // Something went wrong!
         case "status":
-          console.error(msg.message)
           props.enqueueSnackbar(msg.message, { variant: msg.variant.toLowerCase() });
           if (msg.variant === "ERROR") {
+            console.error(msg.message)
             setError(true)
             ws.close()
           }
@@ -76,7 +76,6 @@ function Game(props) {
           if (error) setError(false)
           if (loading) setLoading(false)
           break;
-        
         // If the game is over we inform the winner
         case "gameOver":
           if (msg.isWinner) {
@@ -103,12 +102,12 @@ function Game(props) {
   // CellClick tells the server that the player wants to play a stone
   function cellClick(e) {
     if (ws.readyState === WebSocket.OPEN)
-      ws.send(JSON.stringify(
-        {
-          "messageType": "playStone",
-          "row": e.cell.y,
-          "col": e.cell.x
-        }))
+    ws.send(JSON.stringify(
+      {
+        "messageType": "playStone",
+        "row": e.cell.y,
+        "col": e.cell.x
+      }))
   }
 
   // PassTurn tells the server that the player is passing there turn
