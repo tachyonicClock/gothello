@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import gothello.gothelloserver.Game.GameType;
 import gothello.gothelloserver.exceptions.GameNotFound;
+import gothello.gothelloserver.player.SyntheticPlayer;
+import gothello.gothelloserver.rules.GothelloRules;
 
 import org.slf4j.Logger;
 
@@ -43,6 +45,10 @@ public class MatchMaker {
         Game game = new Game(GameType.SINGLE_PLAYER);
         allGames.put(game.id, game);
         singlePlayerGames.add(game);
+
+        // Create an AI
+        game.attach(new SyntheticPlayer(game, (GothelloRules)game.rules, game.joinGame()));
+
         log.info("[{}] New Single Player Game", game.id);
         printStats();
         return game;

@@ -20,6 +20,7 @@ public class SocketPlayer extends GameObserver {
     private final Logger log = LoggerFactory.getLogger(SocketPlayer.class);
     private final WebSocketSession session;
     private Stone player = Stone.NONE;
+    private Game game;
 
     public void sendMessage(Message message) {
         synchronized(session){

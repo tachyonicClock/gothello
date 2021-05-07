@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
@@ -19,24 +21,26 @@ import org.slf4j.Logger;
 
 public class Game extends Message {
 	private final Logger log = LoggerFactory.getLogger(Game.class);
-	public final Rules rules = new GothelloRules();
 	private List<GameObserver> observers = new ArrayList<>();
-
+	
 	enum GameType {
 		PRIVATE, PUBLIC, SINGLE_PLAYER, INVALID;
-
+		
 		public static GameType fromString(String gameType) {
 			switch (gameType.toLowerCase()) {
-			case "public":
+				case "public":
 				return GameType.PUBLIC;
-			case "private":
+				case "private":
 				return GameType.PRIVATE;
-			case "single_player":
+				case "single_player":
 				return GameType.SINGLE_PLAYER;
 			}
 			return GameType.INVALID;
 		}
 	}
+	
+	@JsonIgnore
+	public final Rules rules = new GothelloRules();
 
 	// The game id is used to refer to the Game
 	public final int id;

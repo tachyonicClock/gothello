@@ -21,13 +21,19 @@ public class PlayStone extends GameCommand {
     private GameCommand internalMakeMove(GothelloState game) throws IllegalMove {
         Board board = game.board;
 
+        if (game.winner != Stone.NONE)
+            throw new IllegalMove("Can't play when the game is over");
+
         if (!board.inBounds(placement))
             throw new IllegalMove("Can't play a stone out of the game board");
 
         if (!game.isTurn(placement.stone))
             throw new IllegalMove("It must be your turn to play a stone");
 
-        changes.push(new Place(placement).makeMove(game));
+        if (game.board.get(placement) != Stone.NONE)
+            throw new IllegalMove("Stones can only be placed on blank squares");
+
+            changes.push(new Place(placement).makeMove(game));
 
         // Flip each stone that has been flipped
         ArrayList<Point> flips = getOthelloFlips(board, placement, placement.stone);
@@ -191,5 +197,10 @@ public class PlayStone extends GameCommand {
             }
         }
         return liberties;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("PlayStone x:%d y:%d", placement.x, placement.y);
     }
 }

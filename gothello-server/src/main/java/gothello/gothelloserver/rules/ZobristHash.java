@@ -28,7 +28,7 @@ public class ZobristHash {
     public long hash(Board board){
         long hashCode = 0;
         for (int i = 0; i < 64; i++) {
-            Stone piece = board.get(i % Board.width, i / Board.height);
+            Stone piece = board.get(new Point(i));
             if (!piece.isPlayable())
                 continue;
             int j = (piece == Stone.BLACK)? 0 : 1;

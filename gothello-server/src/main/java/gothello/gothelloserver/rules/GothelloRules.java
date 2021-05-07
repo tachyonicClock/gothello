@@ -12,7 +12,7 @@ import gothello.gothelloserver.rules.commands.Resign;
  */
 public class GothelloRules implements Rules {
 
-  private GothelloState game = new GothelloState();
+  public GothelloState game = new GothelloState();
 
   public GothelloRules() {
   }
