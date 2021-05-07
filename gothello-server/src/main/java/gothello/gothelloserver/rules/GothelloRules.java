@@ -74,17 +74,17 @@ public class GothelloRules implements Rules {
 
   @Override
   public void pass(Stone player) throws IllegalMove {
-    game.makeMove(new PassTurn(player));
+    game.commitMoveToHistory(new PassTurn(player));
   }
 
   @Override
   public void resign(Stone player) throws IllegalMove {
-    game.makeMove(new Resign(player));
+    game.commitMoveToHistory(new Resign(player));
   }
 
   @Override
   public void playStone(int x, int y, Stone player) throws IllegalMove {
-    game.makeMove(new PlayStone(new Point(x, y), player));
+    game.commitMoveToHistory(new PlayStone(new Point(x, y), player));
   }
 
   @Override

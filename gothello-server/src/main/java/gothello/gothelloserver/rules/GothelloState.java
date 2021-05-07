@@ -26,7 +26,7 @@ public class GothelloState {
   // ko-rule
   public TreeSet<Long> previousStates = new TreeSet<>();
 
-  public void makeMove(GameCommand move) throws IllegalMove {
+  public void commitMoveToHistory(GameCommand move) throws IllegalMove {
     history.push(move.makeMove(this));
   }
 

@@ -1,6 +1,7 @@
 package gothello.gothelloserver;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -112,7 +113,7 @@ public class Game extends Message {
 	public void attach(GameObserver observer) {
 		log.info("[{}] {} - Joined", id, observer.toString());
 		observers.add(observer);
-
+		Collections.sort(observers);
 		if (gameStarted) {
 			observer.update();
 		}

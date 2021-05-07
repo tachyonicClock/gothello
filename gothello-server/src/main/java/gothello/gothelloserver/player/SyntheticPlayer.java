@@ -20,9 +20,16 @@ public class SyntheticPlayer extends GameObserver {
 
 
     private void doMyTurn() throws IllegalMove{
-        int moveScore = search.performSearch(3);
-        log.info("Evaluated {} positions, highest score {}\n Making move {}", search.positionsEvaluated, moveScore, search.getBestMove());
-        search.getBestMove().makeMove(rules.game);
+        long startTime = System.currentTimeMillis();
+        int moveScore = search.performSearch(4);
+        long endTime = System.currentTimeMillis();
+
+        log.info("Evaluated {} positions in {}s, highest score {}\n Making move {}", 
+            search.positionsEvaluated, 
+            (endTime-startTime)/1000.0,
+            moveScore, 
+            search.getBestMove());
+        rules.game.commitMoveToHistory(search.getBestMove());
     }
     
     @Override
@@ -52,5 +59,9 @@ public class SyntheticPlayer extends GameObserver {
         this.game = game;
         this.rules = rules;
         this.player = player;
+    }
+
+    public int observerPriority(){
+        return 1;
     }
 }
