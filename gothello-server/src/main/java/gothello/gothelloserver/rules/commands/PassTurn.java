@@ -33,4 +33,9 @@ public class PassTurn extends GameCommand {
         game.winner = Stone.NONE;
         subMove.unmakeMove(game);
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s pass", player);
+    }
 }
