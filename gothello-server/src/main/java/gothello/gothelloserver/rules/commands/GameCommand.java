@@ -1,7 +1,7 @@
 package gothello.gothelloserver.rules.commands;
 
-import gothello.gothelloserver.rules.GothelloState;
 import gothello.gothelloserver.exceptions.IllegalMove;
+import gothello.gothelloserver.rules.GothelloState;
 
 public abstract class GameCommand {
     public abstract GameCommand makeMove(GothelloState game) throws IllegalMove;
@@ -14,7 +14,7 @@ public abstract class GameCommand {
      */
     public boolean attemptMove(GothelloState game){
         try {
-            makeMove(game);
+            game.playMove(this);
         } catch (IllegalMove e) {
             return false;
         }
