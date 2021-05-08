@@ -24,10 +24,11 @@ public class SyntheticPlayer extends GameObserver {
         int moveScore = search.performSearch(4);
         long endTime = System.currentTimeMillis();
 
-        log.info("Evaluated {} positions in {}s, highest score {}\n Making move {}", 
+        log.info("Evaluated {} positions in {}s, highest score {}\nTransposition Table Hits {}\n Making move {}", 
             search.positionsEvaluated, 
             (endTime-startTime)/1000.0,
             moveScore, 
+            search.transTableHits,
             search.getBestMove());
         rules.game.commitMoveToHistory(search.getBestMove());
     }
