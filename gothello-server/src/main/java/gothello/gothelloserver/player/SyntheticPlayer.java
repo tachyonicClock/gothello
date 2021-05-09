@@ -1,8 +1,8 @@
 package gothello.gothelloserver.player;
 
 import gothello.gothelloserver.Game;
-import gothello.gothelloserver.artificial_intelligence.Search2;
-import gothello.gothelloserver.artificial_intelligence.Search2.ScoredMove;
+import gothello.gothelloserver.artificial_intelligence.Search;
+import gothello.gothelloserver.artificial_intelligence.Search.ScoredMove;
 import gothello.gothelloserver.exceptions.IllegalMove;
 import gothello.gothelloserver.messages.Message;
 import gothello.gothelloserver.rules.GothelloRules;
@@ -17,34 +17,29 @@ public class SyntheticPlayer extends GameObserver {
     private GothelloRules rules;
     private Stone player;
     private Game game;
-    private Search2 search;
+    private Search search;
 
     private void doMyTurn() throws IllegalMove {
         long startTime = System.currentTimeMillis();
-        ScoredMove best = search.performUnlimitedSearch(3);
-        // int moveScore = search.progressiveSearch(2000);
+        ScoredMove best = search.progressiveSearch(1000);
         long endTime = System.currentTimeMillis();
 
         log.info(
             "\n\n{} found in {}s \n" +
-            "Positions: {}\n" +
-            "Terminals: {}\n", 
+            "Positions:     {}\n" +
+            "Terminals:     {}\n" +
+            "Cache Hits:    {}\n" +
+            "Depth:         {}", 
             best.toString(),
             (endTime - startTime) / 1000.0,
             search.getPositionsEvaluated(), 
-            search.getTerminalPositionsReached()
+            search.getTerminalPositionsReached(),
+            search.getCacheHits(),
+            search.getDepthReached()
             );
 
         rules.game.playMove(best.move);
 
-        // log.info("Evaluated {} positions in {}s, highest score {}\nTransposition
-        // Table Hits {}\n Making move {}",
-        // search.positionsEvaluated,
-        // (endTime-startTime)/1000.0,
-        // moveScore,
-        // search.transTableHits,
-        // search.getBestMove());
-        // rules.game.playMove(search.getBestMove());
     }
 
     @Override
@@ -70,7 +65,7 @@ public class SyntheticPlayer extends GameObserver {
     }
 
     public SyntheticPlayer(Game game, GothelloRules rules, Stone player) {
-        search = new Search2(rules, player);
+        search = new Search(rules, player);
         this.game = game;
         this.rules = rules;
         this.player = player;

@@ -45,5 +45,4 @@ public class TranspositionTable {
         return table.get(zKey);
     }
     
-    
 }

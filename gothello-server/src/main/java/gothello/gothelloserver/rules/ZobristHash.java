@@ -15,6 +15,10 @@ public class ZobristHash {
     }
     
     private long[][] table = new long[64][2]; 
+    private long whiteToMoveKey;
+    private long didPassKey;
+
+
     private ZobristHash(){
         // Randomly fill table
         Random rand = new Random();
@@ -23,6 +27,8 @@ public class ZobristHash {
                 table[i][j] = rand.nextLong();
             }
         }
+        whiteToMoveKey = rand.nextLong();
+        didPassKey = rand.nextLong();
     }
     
     public long hash(Board board){
@@ -33,6 +39,17 @@ public class ZobristHash {
                 continue;
             int j = (piece == Stone.BLACK)? 0 : 1;
             hashCode = hashCode ^ table[i][j]; 
+        }
+        return hashCode;
+    }
+
+    public long hashWithPlayer(Stone player, boolean didPass, Board board){
+        long hashCode = hash(board);
+        if (player == Stone.WHITE) {
+            hashCode = hashCode ^ whiteToMoveKey;
+        }
+        if (didPass) {
+            hashCode = hashCode ^ didPassKey;
         }
         return hashCode;
     }
