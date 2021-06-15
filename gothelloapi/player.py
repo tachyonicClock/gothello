@@ -6,45 +6,6 @@ from enum import Enum
 from .stone import Stone
 from .gothello_exception import GothelloException
 
-class Player():
-
-    def board(self):
-        pass
-
-    def get_square(self, x, y):
-        pass
-
-    def is_legal(self, x, y):
-        pass
-
-    def get_turn(self):
-        pass
-
-    def get_turn_number(self):
-        pass
-
-    def get_winner(self):
-        pass
-
-    def is_game_over(self):
-        pass
-
-    def score(self, stone):
-        pass
-
-    def pass_turn(self):
-        pass
-
-    def resign(self):
-        pass
-
-    def play_stone(self, x, y):
-        pass
-
-    async def wait_for_my_turn(self):
-        pass
-
-
 class GothelloMove():
     def __init__(self, message_type: str, contents={}):
         self.msg = json.dumps({"messageType": message_type, **contents})

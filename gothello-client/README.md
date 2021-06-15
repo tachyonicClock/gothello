@@ -48,7 +48,3 @@ PORT=8080 \
 REACT_APP_GOTHELLO_API = "http://localhost:8080/api/v0"
 REACT_APP_GOTHELLO_WS_API = "ws://localhost:8080/api/v0"
 ```
-
-##### Author
-
-[Anton Lee](https://github.com/tachyonicClock)

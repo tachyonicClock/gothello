@@ -1,12 +1,15 @@
 import unittest
 import asyncio
-from gothello.client import *
-from gothello.player import *
+from ..client import *
+from ..player import *
 import time
+
+ENDPOINT="http://localhost:8080"
+ENDPOINT_WS="ws://localhost:8080"
 
 class TestGothelloClient(unittest.TestCase):
     def setUp(self):
-        self.client = GothelloClient("http://localhost:8080")
+        self.client = GothelloClient(ENDPOINT)
 
     def test_new_game(self):
         self.client.new_game("private")
@@ -75,7 +78,6 @@ class TestGameRunner():
         @self.player.my_turn
         def my_turn(player: WebSocketPlayer):
             move = self.handle_line(player)
-            input(f"{player.get_turn_number()} wait {move} {player.game_id()} {player.my_stones()}")
             return move
 
         @self.player.game_over
@@ -97,18 +99,18 @@ def time_usage(func):
 
 class TestGothelloPlayer(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.client = GothelloClient("http://localhost:8080")
+        self.client = GothelloClient(ENDPOINT)
         self.game = self.client.new_game()
-        self.black = await WebSocketPlayer("ws://localhost:8080", self.game["id"]).connect()
-        self.white = await WebSocketPlayer("ws://localhost:8080", self.game["id"]).connect()
+        self.black = await WebSocketPlayer(ENDPOINT_WS, self.game["id"]).connect()
+        self.white = await WebSocketPlayer(ENDPOINT_WS, self.game["id"]).connect()
 
     async def wait_for_game_end(self):
         await asyncio.gather(self.black.listen(), self.white.listen())
 
     @time_usage
     async def test_game(self):
-        TestGameRunner("cases/black_00.json", self.black, self)
-        TestGameRunner("cases/white_00.json", self.white, self)
+        TestGameRunner("test/cases/black_00.json", self.black, self)
+        TestGameRunner("test/cases/white_00.json", self.white, self)
         await self.wait_for_game_end()
 
     async def test_decorators(self):
